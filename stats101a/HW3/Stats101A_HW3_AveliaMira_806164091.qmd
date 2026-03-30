@@ -1,0 +1,331 @@
+---
+title: "Stats 101A - Homework 3"
+author: "Avelia Mira"
+format: 
+  pdf:
+    include-in-header:
+      - text: |
+          \usepackage{fvextra}
+          \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+editor: visual
+---
+
+Note: I gave up trying to use ggplot and instead I am using base R.
+
+## Load libraries & data
+
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+setwd("~/Downloads/stats/stats101a/HW3") 
+
+armspan <- read_csv("armspan2026Wraw.csv") 
+
+height_col <- names(armspan)[2]  
+wingspan_col <- names(armspan)[3]  
+```
+
+## Question 1
+
+For this particular question, we are supposed to do a lot of simulations in order to compare the sample mean, the sample variance, and the MLE of variance.
+
+The population is N(20, 16).
+
+### a) Write code to simulate the estimators
+
+Here is the game plan:
+
+1.  I want to create a function which generates a function that generates `n` random numbers from N(20, 16).
+2.  Then, we want to compare the estimators:
+
+-   x̄ (Sample Mean)
+-   s² (Sample Variance, divides by n-1)
+-   σ̂² (MLE Variance, divides by n)
+
+3.  Then, we want to repeat this process 2000 times.
+4.  Finally, we need to store results in a dataframe.
+
+```{r}
+set.seed(123)
+
+nsims <- 2000
+n <- 10
+samples <- matrix(rnorm(nsims * n, mean = 20, sd = 16), nrow = nsims, ncol = n)
+
+xbar <- rowMeans(samples)
+s2 <- apply(samples, 1, var)  # var() divides by n-1
+sigma2_hat <- rowSums((samples - xbar)^2) / n
+
+sim_data <- data.frame(xbar, s2, sigma2_hat)
+
+head(sim_data)
+
+```
+
+### b) Bias of estimators (n=10)
+
+We want to check which estimator is biased to check which estimator is unbiased. Of course, I have previous knowledge on this matter and the answer is actually the MLE variance because it does not correct for the degrees of freedom lost when calculating the mean.
+
+```{r}
+bias_summary <- sim_data |>
+  summarize(
+    across(everything(), mean)
+  ) |>
+  pivot_longer(everything(), names_to = "Estimator", values_to = "AverageEstimate") |>
+  mutate(
+    TrueValue = c(20, 256, 256),
+    .before = AverageEstimate
+  )
+
+print(bias_summary)
+
+hist(sim_data$s2, freq = FALSE, col = rgb(0, 1, 1, 0.5), main = "Sampling Distributions of Variance Estimators (n=10)", xlab = "Estimate Value", ylim = c(0, 0.004), breaks = 30)
+hist(sim_data$sigma2_hat, freq = FALSE, col = rgb(1, 0, 0, 0.5), add = TRUE, breaks = 30)
+abline(v = 256, lty = 2, lwd = 2, col = "black")
+legend("topright", c("s^2", "MLE"), fill = c(rgb(0, 1, 1, 0.5), rgb(1, 0, 0, 0.5)))
+
+```
+
+The sample mean and sample variance are both unbiased, as the sample mean has an average of 19.9082 across 2000 simulations, which is very close to the true mean of 20, and the sample variance is unbiased because it has an average of 256.4101, nearly matching the true variance of 256.
+
+However, consider that the MLE variance is biased because it seems to underestimate the true value of 256 with an average of 230.7691. We prefer the sample variance because it divides for n-1 which, like mentioned earlier, it corrects the degrees of freedom lost when we estimate the mean which makes it an unbiased estimator of the population variance.
+
+### c) Effect of sample size on bias of the mean
+
+We will test n=50 and n=500.
+
+```{r}
+check_bias_mean <- function(n_size) {
+  samples <- matrix(rnorm(2000 * n_size, mean = 20, sd = 16), nrow = 2000, ncol = n_size)
+  return(mean(rowMeans(samples)))
+}
+
+set.seed(123)
+mean_n50 <- check_bias_mean(50)
+mean_n500 <- check_bias_mean(500)
+
+cat(sprintf("Average xbar (n=50): %.4f\n", mean_n50))
+cat(sprintf("Average xbar (n=500): %.4f\n", mean_n500))
+
+```
+
+When we increase the sample size, the bias is not affected because we already know that the sample meaan is an unbiased estimator regardless of the sample size. The average of the estimates still remain quite close to the true mean of 20 for both n=50 and n=500. We can see that for n=50, we get 20.0156, and for n=500, 19.9860, which again are pretty close to the true mean of 20.
+
+### d) Effect of sample size on precision
+
+Precision refers to the spread, or the variance or standard deviation, of the sampling distribution.
+
+```{r}
+get_sd <- function(n) {
+  samples <- matrix(rnorm(2000 * n, mean = 20, sd = 16), nrow = 2000, ncol = n)
+  xbar <- rowMeans(samples)
+  s2 <- apply(samples, 1, var)
+  sigma2_hat <- rowSums((samples - xbar)^2) / n
+  
+  return(c(sd(xbar), sd(s2), sd(sigma2_hat)))
+}
+
+set.seed(123)
+results_precision <- tibble(
+  Estimator = c("xbar", "s2", "sigma2_hat"),
+  SD_n10 = get_sd(10),
+  SD_n50 = get_sd(50),
+  SD_n500 = get_sd(500)
+)
+
+print(results_precision)
+
+```
+
+As we increase the sample size increases the precision, or decreases the standard deviation for all three estimators. As n grows, the standard errors get smaller, meaning the estimates cluster more tightly around the true population values. You may read the data frame going from left to right indicating n=10 for the first column, n=50 for the second column, and n=500 for the third column.
+
+### e) Lizards (n=3)
+
+Given that they have used a sample size of n=3, the estimator will still be unbiased and thus will target the correct value on average. However, because it is a sample size of n=3 and thus is low, the precision will be absolutely terrible. The standard error will be large and will only decrease as the sample size increases. Because of this standard error being large, consider that we're going still very likely to have an estimate which is far from the true population mean, even if the method is valid, due to the confidence intervals going to be super large.
+
+------------------------------------------------------------------------
+
+## Question 2
+
+We are simulating the linear model: Yi = β₀ + β₁xi + εi, where εi \~ N(0, σ).
+
+### a) R function to simulate data
+
+```{r}
+mylinearmodel <- function(beta_0, beta_1, sigma, x, seed) {
+  set.seed(seed)
+  n <- length(x)
+  
+  epsilon <- rnorm(n, mean = 0, sd = sigma)
+  
+  y <- beta_0 + beta_1 * x + epsilon
+  
+  return(y) # The last line is the output
+}
+
+```
+
+### b) Scatterplot
+
+Inputs: x is `rep(seq(1,10,by=.1),4)`, `seed=123`, `beta_0=1`, `beta_1=3`, `sigma=10`.
+
+```{r}
+x_vals <- rep(seq(1, 10, by = 0.1), 4)
+
+y_vals <- mylinearmodel(beta_0 = 1, 
+                        beta_1 = 3, 
+                        sigma = 10, 
+                        x = x_vals, 
+                        seed = 123)
+
+df_sim <- data.frame(x = x_vals, y = y_vals)
+
+plot(df_sim$x, df_sim$y, main = "Simulated Linear Model (Sigma = 10)", xlab = "X", ylab = "Y", pch = 16, col = rgb(0, 0, 0, 0.5))
+lm_fit <- lm(y ~ x, data = df_sim)
+abline(lm_fit, col = "red", lwd = 2)
+
+```
+
+### c) Correlation coefficient
+
+```{r}
+r_val <- cor(df_sim$x, df_sim$y)
+cat(sprintf("Correlation coefficient (r): %.5f\n", r_val))
+
+```
+
+The correlation coefficient is approximately **0.64575**.
+
+### d) Generate new Y for greater correlation
+
+To increase the correlation, or make the points cluster tighter to the line, I need to decrease the noise by decreasing `sigma` from 10 to 2.
+
+```{r}
+y_new <- mylinearmodel(beta_0 = 1, 
+                       beta_1 = 3, 
+                       sigma = 2, 
+                       x = x_vals, 
+                       seed = 123)
+
+r_new <- cor(x_vals, y_new)
+
+cat(sprintf("New Correlation coefficient: %.5f\n", r_new))
+
+```
+
+By changing `sigma` to 2, the correlation increased to approximately **0.97162**.
+
+------------------------------------------------------------------------
+
+## Question 3
+
+Using `armspan2026Wraw.csv`.
+
+### a) Data cleaning
+
+We need to realise that the data cleaning for this is absolutely annoying because, uh, some people are idiots. Multiple guys (and maybe some girls?) in the class thought it would be funny to put strings instead of integers or floats. Anyway, here's the game plan: 1. Filter out any rows where `wingspan` or `height` are `NA`. 2. Filter out impossible values (e.g., height \<= 0). 3. The most important part: convert any wrong formats. If it has the word "inches", replace it. If it has apostrophes, the person didn't listen to the instructions and we need to convert it to the inches format. In order to do this, I wanted to first handle the apostrophe format first, then just removed any non-numeric characters in the strings of the stuff.
+
+I also went out of my way to clean up the dataframe and create columns named "height" and "wingspan" for easier analysis.
+
+```{r}
+convert_to_inches <- function(x) {
+  x <- as.character(x)
+  result <- numeric(length(x))
+  
+  has_apostrophe <- grepl("'", x)
+  if (any(has_apostrophe)) {
+    apostrophe_vals <- x[has_apostrophe]
+    parts_list <- strsplit(apostrophe_vals, "'")
+    feet <- as.numeric(sapply(parts_list, `[`, 1))
+    inches <- as.numeric(sapply(parts_list, function(p) gsub("[^0-9.]", "", ifelse(length(p) > 1, p[2], 0))))
+    result[has_apostrophe] <- feet * 12 + inches
+  }
+  
+  no_apostrophe <- !has_apostrophe
+  if (any(no_apostrophe)) {
+    result[no_apostrophe] <- as.numeric(gsub("[^0-9.]", "", x[no_apostrophe]))
+  }
+  
+  result[is.na(x)] <- NA
+  return(result)
+}
+
+height_clean <- convert_to_inches(armspan[[2]])
+wingspan_clean <- convert_to_inches(armspan[[3]])
+
+valid_idx <- !is.na(height_clean) & !is.na(wingspan_clean) & height_clean > 0 & wingspan_clean > 0
+armspan_clean <- data.frame(
+  height = height_clean[valid_idx],
+  wingspan = wingspan_clean[valid_idx]
+)
+
+cat(sprintf("Original rows: %d\n", nrow(armspan)))
+cat(sprintf("Cleaned rows: %d\n", nrow(armspan_clean)))
+
+```
+
+### b) Plot wingspan vs height
+
+```{r}
+plot(armspan_clean$height, armspan_clean$wingspan, main = "Wingspan vs Height", xlab = "Height (inches)", ylab = "Wingspan (inches)", pch = 16)
+
+```
+
+Based off this graph, there is a positive linear trend between height and wingspan. As height increases, so does wingspan.
+
+### c) Fit a linear model
+
+```{r}
+model <- lm(wingspan ~ height, data = armspan_clean)
+
+coeffs <- coef(model)
+b0 <- coeffs[1]
+b1 <- coeffs[2]
+
+cat(sprintf("Estimated Equation: Wingspan = %.4f + %.4f * Height\n", b0, b1))
+
+plot(armspan_clean$height, armspan_clean$wingspan, main = "Wingspan vs Height with Regression Line", xlab = "Height", ylab = "Wingspan", pch = 16)
+abline(model, col = "blue", lwd = 2)
+
+```
+
+### d) Prediction for my height
+
+I am 69 inches tall with a wingspan of 69 inches.
+
+```{r}
+my_height <- 69
+my_wingspan <- 69
+
+pred_wingspan <- b0 + b1 * my_height
+
+my_residual <- my_wingspan - pred_wingspan
+
+my_results <- tibble(
+  Height = my_height,
+  ActualWingspan = my_wingspan,
+  PredictedWingspan = pred_wingspan,
+  Residual = my_residual
+)
+
+print(my_results)
+
+```
+
+My predicted wingspan is 69.0699 inches, and my actual wingspan is 69 inches, giving me a residual of -0.0626 inches. This means my wingspan is slightly less than predicted by the model.
+
+### e) Michael Phelps
+
+```{r}
+phelps_predicted_value <- b0 + b1 * 76
+phelps_residual <- 79 - phelps_predicted_value
+
+cat(sprintf("Phelps Residual: %.4f\n", phelps_residual))
+
+plot(armspan_clean$height, armspan_clean$wingspan, main = "Wingspan vs Height (Red Line is y=x)", xlab = "Height", ylab = "Wingspan", pch = 16)
+abline(0, 1, col = "red", lty = 2, lwd = 2)
+
+```
+
+Michael Phelps has a wingspan 2.0833 inches greater than the predicted model. As I look at the plot, Michael Phelps would be above this line which shows that his wingspan is above what would be expected. With a residual of about 2.0833 inches, this is like pretty above the regression line which suggests the ratio to be larger than average. However, perhaps it is not unusual given the scatter in the data.

@@ -1,0 +1,224 @@
+---
+title: "Stats 101A - Homework 7"
+author: "Avelia Mira"
+date: today
+format: pdf
+---
+
+## Question 1: Magazine Advertising Revenue Analysis
+
+The price of advertising (and hence revenue from advertising) is different from one consumer magazine to another. Publishers of consumer magazines argue that magazines that reach more readers create more value for the advertiser. Thus, circulation is an important factor that affects revenue from advertising. In this exercise, we are going to investigate the effect of circulation on gross advertising revenue. The data are for the top 70 US magazines ranked in terms of total gross advertising revenue in 2006. In particular we will develop regression models to predict gross advertising revenue per advertising page in 2006 (in thousands of dollars) from circulation (in millions). The data were obtained from http://adage.com and are given in the file AdRevenue.csv which is available on the book web site.
+
+### Part A: Simple Linear Regression Model
+
+#### A(a) Develop a simple linear regression model
+
+Develop a simple linear regression model based on least squares that predicts advertising revenue per page from circulation (i.e., feel free to transform either the predictor variable or the response variable or both variables). Ensure that you provide justification for your choice of model.
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+
+ad_revenue <- read_csv("AdRevenue.csv")
+
+ad_data_log <- ad_revenue %>%
+  mutate(
+    log_Rev = log(AdRevenue),
+    log_Circ = log(Circulation)
+  )
+
+model_A <- lm(log_Rev ~ log_Circ, data = ad_data_log)
+summary(model_A)
+
+par(mfrow=c(2,2))
+plot(model_A)
+par(mfrow=c(1,1))
+```
+
+A log-log transformation captures the power-law relationship common in economic data: $\log(\text{Revenue}) = \beta_0 + \beta_1 \log(\text{Circulation})$. This approach has advantages in terms of interpretability (elasticity) and can help stabilize variance. The diagnostic plots reveal some minor issues (outliers, slight Q-Q deviations), but overall the assumptions are reasonably satisfied, making this a suitable model for inference and prediction.
+
+The slope coefficient ($\hat{\beta}_1 = 0.529$) represents elasticity: a 1% increase in circulation yields approximately 0.53% increase in revenue. This is more interpretable than raw coefficients on the original scale.
+
+While the log transformation helps reduce heteroscedasticity compared to the linear model, the diagnostic plots reveal some lingering issues:
+   - The Scale-Location plot shows mild variance inflation at higher fitted values
+   - A few outliers remain visible in the Residuals vs Fitted plot
+   - However, these violations are more manageable than in the untransformed polynomial model
+
+The model shows strong overall fit: $R^2 = 0.881$, $F = 503.6$ (p < 0.001). While this indicates a strong relationship, it doesn't guarantee that all linear regression assumptions are perfectly satisfied. Despite some diagnostic violations (evident outliers, minor non-normality in Q-Q tails), the log-log model represents a reasonable balance between capturing the relationship and maintaining interpretability.
+
+#### A(b) Find 95% prediction intervals
+
+Find a 95% prediction interval for the advertising revenue per page for magazines with the following circulations:
+
+**(i) 0.5 million:**
+
+```{r}
+new_data_A_i <- data.frame(log_Circ = log(0.5))
+
+log_pred_A_i <- predict(model_A, newdata = new_data_A_i, interval = "prediction", level = 0.95)
+
+pred_interval_A_i <- exp(log_pred_A_i)
+print(pred_interval_A_i)
+```
+
+Fit = \$74.31 thousand, 95% PI: [\$51.82, \$106.55] thousand
+
+**(ii) 20 million:**
+
+```{r}
+new_data_A_ii <- data.frame(log_Circ = log(20))
+
+log_pred_A_ii <- predict(model_A, newdata = new_data_A_ii, interval = "prediction", level = 0.95)
+
+pred_interval_A_ii <- exp(log_pred_A_ii)
+print(pred_interval_A_ii)
+```
+
+Ft = \$522.57 thousand, 95% PI: [\$359.90, \$758.76] thousand
+
+#### A(c) Describe weaknesses in your model
+
+Some weaknesses of the log-log model include the presence of outliers (evident in the Residuals vs Fitted plot) and slight deviations from normality in the Q-Q plot, particularly in the tails. These issues can affect the reliability of inference and prediction intervals. Additionally, while the log transformation helps stabilize variance, there is still some evidence of heteroscedasticity (increasing variance with fitted values) in the Scale-Location plot. This means that the prediction intervals may be less reliable, especially for larger circulation values where variance is higher. Finally, the model assumes a constant elasticity relationship, which may not perfectly capture all nuances in the data.
+
+### Part B: Polynomial Regression Model
+
+#### B(a) Develop a polynomial regression model
+
+Develop a polynomial regression model based on least squares that directly predicts the effect on advertising revenue per page of an increase in circulation of 1 million people (i.e., do not transform either the predictor nor the response variable). Ensure that you provide detailed justification for your choice of model. [Hint: Consider polynomial models of order up to 3.]
+
+```{r}
+model_B1 <- lm(AdRevenue ~ Circulation, data = ad_revenue)
+model_B2 <- lm(AdRevenue ~ Circulation + I(Circulation^2), data = ad_revenue)
+model_B3 <- lm(AdRevenue ~ Circulation + I(Circulation^2) + I(Circulation^3), data = ad_revenue)
+
+summary(model_B1)
+summary(model_B2)
+summary(model_B3)
+
+cat("\nAdjusted R-squared:")
+cat("\nModel B1 (linear):", summary(model_B1)$adj.r.squared)
+cat("\nModel B2 (quadratic):", summary(model_B2)$adj.r.squared)
+cat("\nModel B3 (cubic):", summary(model_B3)$adj.r.squared)
+
+cat("\n\nAIC comparisons:")
+print(AIC(model_B1, model_B2, model_B3))
+
+par(mfrow=c(2,2))
+plot(model_B3)  
+par(mfrow=c(1,1))
+```
+
+Based on the summaries and model comparisons above, we would select the cubic polynomial model (model_B3) as it has the highest adjusted R-squared and lowest AIC, indicating the best fit to the data. However, the diagnostic plots reveal significant issues with this model, including heteroscedasticity (evident in the Scale-Location plot), systematic patterns in the Residuals vs Fitted plot, and deviations from normality in the Q-Q plot. These violations suggest that while the cubic model may fit the training data well, it may not provide reliable predictions or inference due to assumption violations. However, it captures the nonlinear relationship between circulation and revenue without transforming the variables, which may be desirable for interpretability on the original scale. Despite this, it is important to note that we must be cautious in interpreting the results and using the model for prediction due to the significant assumption violations. The interpretation of the effect of a 1 million increase in circulation is not constant across all levels of circulation and would require calculating the derivative of the fitted cubic polynomial to understand how the effect changes with different circulation levels.
+
+#### B(b) Find 95% prediction intervals
+
+Find a 95% prediction interval for the advertising page cost for magazines with the following circulations:
+
+**(i) 0.5 million:**
+
+```{r}
+new_data_B_i <- data.frame(Circulation = 0.5)
+
+pred_interval_B_i <- predict(model_B3, newdata = new_data_B_i, interval = "prediction", level = 0.95)
+print("95% Prediction Interval for 0.5 million circulation:")
+print(pred_interval_B_i)
+```
+
+Fit = \$84.17 thousand, 95% PI: [\$14.92, \$153.41] thousand
+
+**(ii) 20 million:**
+
+```{r}
+new_data_B_ii <- data.frame(Circulation = 20)
+
+pred_interval_B_ii <- predict(model_B3, newdata = new_data_B_ii, interval = "prediction", level = 0.95)
+print("95% Prediction Interval for 20 million circulation:")
+print(pred_interval_B_ii)
+```
+
+Fit = \$499.53 thousand, 95% PI: [\$418.18, \$580.89] thousand
+
+#### B(c) Describe weaknesses in your model
+
+The weaknesses of the polynomial model are primarily related to the significant violations of linear regression assumptions, as revealed by the diagnostic plots. The Scale-Location plot shows a clear fan-shaped pattern, indicating heteroscedasticity (non-constant variance), which undermines the reliability of the prediction intervals. The Residuals vs Fitted plot reveals systematic patterns and outliers, suggesting that the model does not capture all the underlying structure in the data. Additionally, the Q-Q plot shows deviations from normality, particularly in the tails, which can affect inference. Finally, while the cubic polynomial may fit the training data well, it is prone to overfitting and can produce unreliable predictions, especially when extrapolating beyond the range of observed data (e.g., at 20 million circulation). The model's complexity also makes it less interpretable compared to simpler models like the log-log transformation used in Part A.
+
+### Part C: Model Comparison
+
+#### C(a) Compare the models
+
+We believe that Model A (log-log) is superior to Model B (polynomial) due to better adherence to linear regression assumptions, greater interpretability, and more reliable prediction intervals. Model A captures the relationship between circulation and revenue in a way that is grounded in economic theory (elasticity) and exhibits fewer diagnostic issues compared to the polynomial model, which shows significant heteroscedasticity and non-normality. The polynomial model's assumption violations undermine the validity of its predictions and inference, especially at higher circulation levels where variance is higher. Therefore, we recommend using Model A for inference and prediction in this context.
+
+#### C(b) Compare the prediction intervals
+
+Compare the prediction intervals in Part A with those in Part B. In each case, decide which interval you would recommend.
+
+For both circulation levels (0.5 million and 20 million), we recommend using the prediction intervals from Model A (log-log) over those from Model B (polynomial). The prediction intervals from Model A are more reliable due to better adherence to linear regression assumptions, while the intervals from Model B are compromised by significant heteroscedasticity and non-normality. Additionally, the log-log model's intervals are more interpretable and grounded in economic theory, making them a more trustworthy choice for predicting advertising revenue per page based on circulation. It is important to note that while Model A's intervals are more reliable, they may still be affected by some minor assumption violations, so caution should be exercised when interpreting the results, especially for extrapolation beyond the observed data range.
+
+## Question 2: Mario Kart Analysis
+
+### 2a) Model with Numeric Variables Only
+
+Fit a model that predicts the total price using only the numeric variables. Assuming that the model is valid, interpret the nBids coefficient.
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+
+marioKart <- read_csv("marioKart.csv")
+
+model_numeric <- lm(totalPr ~ duration + nBids + startPr + shipPr + sellerRate + wheels, 
+                    data = marioKart)
+summary(model_numeric)
+```
+
+Holding all other variables in the model constant (duration, starting price, shipping price, seller rating, and wheels), for every additional bid placed on the auction, the total price of the game increases by $\hat{\beta}_{\text{nBids}} = 0.2375$ dollars, on average. This is statistically significant at the 0.05 level (p-value = 0.01050).
+
+
+### 2b) Wheels Coefficient
+
+Holding all other numeric variables constant, for every additional steering wheel included in the auction package, the total price increases by $\hat{\beta}_{\text{wheels}} = 7.938$ dollars, on average. This is highly statistically significant (p < 0.001). This directly answers the question: "How much are wheels worth?" - each wheel adds approximately \$7.94 to the auction price.
+
+
+### 2c) Adding the Condition Variable
+
+Refit the model to include the `cond` variable. All things being equal, does it matter, with respect to the total price, whether the game is new or used? If so, what is the effect of the condition of the game on price?
+
+```{r message=FALSE, warning=FALSE}
+model_cond <- lm(totalPr ~ duration + nBids + startPr + shipPr + sellerRate + wheels + cond, 
+                 data = marioKart)
+summary(model_cond)
+```
+
+Yes, condition matters significantly (p = 4.61e-06). Used games sell for \$4.455 less than New games on average ($\hat{\beta}_{\text{cond used}} = -4.455$).
+
+
+## Question 3: Practice Problem Analysis
+
+The `practiceproblem.csv` file contains y (finish_time), x (barrier_time), and residuals from a linear regression. Calculate the following without fitting a linear model:
+
+### 3a) Calculate $S_{XX}$
+
+Formula: $S_{XX} = \sum (x_i - \bar{x})^2$
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+
+practice <- read_csv("practiceproblem.csv")
+
+x_bar <- mean(practice$barrier_time)
+SXX <- sum((practice$barrier_time - x_bar)^2)
+print(paste("SXX:", round(SXX, 2)))
+
+y_bar <- mean(practice$finish_time)
+SYY <- sum((practice$finish_time - y_bar)^2)
+print(paste("SYY:", round(SYY, 2)))
+
+RSS <- sum(practice$resids^2)
+n <- nrow(practice)
+sigma_sq_hat <- RSS / (n - 2)
+print(paste("RSS:", round(RSS, 2), "| n:", n, "| Sigma^2:", round(sigma_sq_hat, 3)))
+
+SSReg <- SYY - RSS
+print(paste("SSReg:", round(SSReg, 2)))
+
+R_squared <- SSReg / SYY
+print(paste("R-squared:", round(R_squared, 4)))
+```

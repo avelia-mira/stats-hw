@@ -1,0 +1,394 @@
+---
+title: "Stats 101A - Take-Home Exam 1"
+author: "Avelia Mira"
+format: 
+  pdf:
+    include-in-header:
+      - text: |
+          \usepackage{fvextra}
+          \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+editor: visual
+---
+
+# Setup and Data Loading
+
+First, I wanted to load the libraries and the data or whatever, then check the first few rows and whatnot for structure.
+
+```{r setup, include=TRUE}
+# Load libraries
+library(tidyverse)
+library(ggplot2)
+
+# Load data
+bikes <- read.csv("sample_of_bikes_4.csv")
+trips <- read.csv("sample_of_trips_4.csv")
+
+# Display first few rows and structure
+head(bikes)
+head(trips)
+str(bikes)
+str(trips)
+```
+
+# Question 1: Sample of Bikes
+
+We can use nrow of bikes to get the number of bikes.
+
+## Q1.1: Number of bikes
+
+```{r q1.1}
+# Total rows (trips per bike in sample)
+number_of_bikes <- nrow(bikes)
+
+# Unique bikes (safer if duplicates exist)
+unique_bikes <- length(unique(bikes$BikeID))
+# Or with dplyr:
+unique_bikes_dplyr <- n_distinct(bikes$BikeID)
+
+number_of_bikes
+unique_bikes
+unique_bikes_dplyr
+```
+
+**Answer: 2236** (rows). If duplicates existed, the unique bike count would be `r unique_bikes` (same here).
+
+## Q1.2: Longest bike trip
+
+```{r q1.2}
+# Find the bike with the longest trip duration
+longest <- bikes[which.max(bikes$Duration), "BikeID"]
+longest
+
+# Verify: check the max duration
+max_duration <- max(bikes$Duration, na.rm = TRUE)
+max_duration
+```
+
+## Q1.3: Most rented bike
+
+```{r q1.3}
+# Count number of trips per bike
+bike_trips <- bikes |>
+  group_by(BikeID) |>
+  summarise(num_trips = n(), .groups = 'drop') |>
+  arrange(desc(num_trips))
+
+head(bike_trips)
+
+most_rented <- bike_trips$BikeID[1]
+most_rented
+```
+
+**Answer: 6536**
+
+## Q1.4: Longest average duration
+
+```{r q1.4}
+# Calculate average duration per bike
+avg_bike_duration <- bikes |>
+  group_by(BikeID) |>
+  summarise(avg_duration = mean(Duration, na.rm = TRUE), .groups = 'drop') |>
+  arrange(desc(avg_duration))
+
+head(avg_bike_duration)
+
+longest_avg <- avg_bike_duration$BikeID[1]
+longest_avg
+```
+
+**Answer: 5868**
+
+## Q1.5: Code Summary for Question 1
+
+```{r q1.5-code}
+# Question 1 Analysis Code
+
+# Load data
+bikes <- read.csv("sample_of_bikes_4.csv")
+
+# Q1.1
+unique_bikes <- length(unique(bikes$BikeID))
+
+# Q1.2
+longest <- bikes[which.max(bikes$Duration), "BikeID"]
+
+# Q1.3
+bike_trips <- bikes |>
+  group_by(BikeID) |>
+  summarise(num_trips = n(), .groups = 'drop') |>
+  arrange(desc(num_trips))
+most_rented <- bike_trips$BikeID[1]
+
+# Q1.4
+avg_bike_duration <- bikes |>
+  group_by(BikeID) |>
+  summarise(avg_duration = mean(Duration, na.rm = TRUE), .groups = 'drop') |>
+  arrange(desc(avg_duration))
+longest_avg <- avg_bike_duration$BikeID[1]
+```
+
+# Question 2: 90% Confidence Interval for Mean Trip Duration
+
+```{r q2-exploratory}
+# Load trips data
+trips <- read.csv("sample_of_trips_4.csv")
+
+# Explore the data
+head(trips)
+str(trips)
+
+# Summary statistics for Duration
+summary(trips$Duration)
+```
+
+```{r q2-ci}
+# Calculate 90% confidence interval for mean duration
+n <- nrow(trips)
+mean_duration <- mean(trips$Duration, na.rm = TRUE)
+se <- sd(trips$Duration, na.rm = TRUE) / sqrt(n)
+
+# Using t-distribution (n-1 degrees of freedom)
+t_critical <- qt(0.95, df = n - 1)  # 90% CI means 5% in each tail
+
+lower_bound <- mean_duration - t_critical * se
+upper_bound <- mean_duration + t_critical * se
+
+c(lower_bound, upper_bound)
+
+# Verify with built-in function
+t.test(trips$Duration, conf.level = 0.90)
+```
+
+```{r q2.1-q2.2}
+# Round to three decimal places
+lb <- round(lower_bound, 3)
+ub <- round(upper_bound, 3)
+
+lb
+ub
+```
+
+**Answer Q2.1 (Lower Bound): 1351.014**
+
+**Answer Q2.2 (Upper Bound): 1902.962**
+
+## Q2.3: Code for Question 2
+
+```{r q2.3-code}
+# Load data
+trips <- read.csv("sample_of_trips_4.csv")
+
+# Calculate 90% CI for mean duration
+n <- nrow(trips)
+mean_duration <- mean(trips$Duration, na.rm = TRUE)
+se <- sd(trips$Duration, na.rm = TRUE) / sqrt(n)
+t_critical <- qt(0.95, df = n - 1)
+
+lower_bound <- round(mean_duration - t_critical * se, 3)
+upper_bound <- round(mean_duration + t_critical * se, 3)
+
+# Alternative: using t.test
+t_result <- t.test(trips$Duration, conf.level = 0.90)
+```
+
+# Question 3: Hypothesis Test - Weekend vs Weekday Trip Duration
+
+```{r q3-exploratory}
+# Explore the IsWeekend variable
+table(trips$IsWeekend)
+
+# Separate weekday and weekend trips
+weekday <- trips[trips$IsWeekend == 0, "Duration"]
+weekend <- trips[trips$IsWeekend == 1, "Duration"]
+
+# Summary statistics
+summary(weekday)
+summary(weekend)
+
+# Compare means
+cat("Weekday mean:", mean(weekday, na.rm = TRUE), "seconds\n")
+cat("Weekend mean:", mean(weekend, na.rm = TRUE), "seconds\n")
+cat("Difference:", mean(weekend, na.rm = TRUE) - mean(weekday, na.rm = TRUE), "seconds\n\n")
+
+# Visualize - zoom in to where most data is (remove extreme outliers for visualization)
+# Use 95th percentile as upper limit to see the actual distribution
+upper_limit_weekday <- quantile(weekday, 0.95, na.rm = TRUE)
+upper_limit_weekend <- quantile(weekend, 0.95, na.rm = TRUE)
+upper_limit <- max(upper_limit_weekday, upper_limit_weekend)
+
+par(mfrow = c(1, 2))
+hist(weekday[weekday <= upper_limit], 
+     breaks = 30, 
+     main = "Weekday Trip Durations\n(95% of data)", 
+     xlab = "Duration (seconds)",
+     col = "lightblue")
+hist(weekend[weekend <= upper_limit], 
+     breaks = 30, 
+     main = "Weekend Trip Durations\n(95% of data)", 
+     xlab = "Duration (seconds)",
+     col = "lightcoral")
+par(mfrow = c(1, 1))
+
+# Boxplot comparison
+boxplot(weekday, weekend, 
+        names = c("Weekday", "Weekend"),
+        main = "Comparison of Trip Durations",
+        ylab = "Duration (seconds)",
+        col = c("lightblue", "lightcoral"))
+```
+
+## Q3.1: Alternative Hypothesis
+
+```{r q3.1}
+# H0: μ0 - μ1 = 0
+# Ha: μ0 - μ1 < 0 (weekday mean < weekend mean)
+# Or equivalently: μ0 < μ1
+cat("Alternative Hypothesis: H_a: μ0 - μ1 < 0\n")
+cat("Or equivalently: μ0 < μ1 (weekday duration < weekend duration)\n")
+```
+
+**Answer Q3.1:** $H_a: \mu_0 - \mu_1 < 0$ (Weekday trips are shorter than weekend trips on average)
+
+## Q3.2 & Q3.3: Two-sample t-test
+
+```{r q3-t-test}
+# Two-sample t-test
+# H0: μ0 - μ1 = 0 (means are equal)
+# Ha: μ0 < μ1 (weekday duration < weekend duration) - one-tailed test
+
+t_test_result <- t.test(weekday, weekend, 
+                        alternative = "less", 
+                        var.equal = FALSE)
+
+t_test_result
+
+p_value <- t_test_result$p.value
+p_value
+
+# Decision at α = 0.05
+alpha <- 0.05
+if (p_value < alpha) {
+  decision <- "Reject the null hypothesis"
+} else {
+  decision <- "Fail to reject the null hypothesis"
+}
+
+cat("Decision:", decision, "\n")
+cat("p-value:", p_value, "\n")
+```
+
+**Answer Q3.2 (p-value): 0.026** (or more precisely: 0.02622416)
+
+**Answer Q3.3 (Decision): Reject the null hypothesis**
+
+Since p-value (0.026) \< α (0.05), we reject the null hypothesis. Weekend trips are statistically significantly longer than weekday trips.
+
+## Q3.4: Code for Question 3
+
+```{r q3.4-code}
+# Load data
+trips <- read.csv("sample_of_trips_4.csv")
+
+# Separate by weekend status
+weekday <- trips[trips$IsWeekend == 0, "Duration"]
+weekend <- trips[trips$IsWeekend == 1, "Duration"]
+
+# Two-sample t-test
+t_test_result <- t.test(weekday, weekend, 
+                        alternative = "less", 
+                        var.equal = FALSE)
+
+p_value <- t_test_result$p.value
+
+p_value
+```
+
+# Question 4: Sampling Distribution of Sample Medians
+
+```{r q4-exploratory}
+# Examine the distribution of Duration
+summary(trips$Duration)
+hist(trips$Duration, breaks = 100, main = "Distribution of Trip Duration", xlab = "Duration (seconds)")
+boxplot(trips$Duration, main = "Boxplot of Trip Duration")
+
+# Check for skewness
+skewness_val <- (mean(trips$Duration) - median(trips$Duration)) / sd(trips$Duration)
+cat("Skewness (mean - median) / sd:", skewness_val, "\n")
+```
+
+```{r q4-simulation}
+set.seed(333)
+
+n <- 2181
+sample_num <- 100000
+
+# Generate sampling distribution of sample medians
+sample_medians <- numeric(sample_num)
+
+for (i in 1:sample_num) {
+  sample_data <- sample(trips$Duration, size = n, replace = TRUE)
+  sample_medians[i] <- median(sample_data, na.rm = TRUE)
+}
+
+# Plot the sampling distribution
+hist(sample_medians, breaks = 50, main = "Sampling Distribution of Sample Median (n=2181)")
+qqnorm(sample_medians)
+qqline(sample_medians)
+
+# Summary statistics
+summary(sample_medians)
+```
+
+```{r q4-describe}
+# Describe the sampling distribution
+cat("Mean of sample medians:", mean(sample_medians), "\n")
+cat("SD of sample medians:", sd(sample_medians), "\n")
+cat("Min:", min(sample_medians), "\n")
+cat("Max:", max(sample_medians), "\n")
+cat("Median of sample medians:", median(sample_medians), "\n")
+```
+
+## Q4.1: Description of Sampling Distribution
+
+**Population Distribution (Trip Duration):** The original data shows a **strongly right-skewed distribution**: - Heavily concentrated at the lower end (300-600 seconds) - Mean: 1626.988 seconds, Median: 600 seconds (mean \>\> median confirms right skew) - Maximum duration: 206,160 seconds (\~57 hours!) with many extreme outliers - The boxplot shows numerous outliers extending far to the right - Skewness measure: 0.131 (right-skewed)
+
+**Sampling Distribution of Sample Medians:** Despite the strongly right-skewed population, the sampling distribution is **approximately discrete/uniform rather than normal**: - The distribution is tightly concentrated between 600 and 660 seconds - Mean of sample medians: \~618 seconds - SD of sample medians: \~27.5 seconds\
+- Range: 600 to 660 seconds (very narrow!) - Most sample medians cluster at 600 seconds (the population median) - The Q-Q plot shows significant deviations from normality, appearing flat/uniform rather than bell-shaped - The distribution is discrete, with values appearing only at specific points
+
+**This is unexpected!** We might expect the sampling distribution of the median to inherit some of the population's skewness or to be approximately normal by the Central Limit Theorem. Instead, it appears remarkably uniform and discrete, suggesting the sample median is a robust and stable estimator that clusters tightly around the population median value.
+
+## Q4.2: Picture
+
+See histogram and Q-Q plot above.
+
+## Q4.3: Code for Question 4
+
+```{r q4.3-code}
+set.seed(333)
+
+trips <- read.csv("sample_of_trips_4.csv")
+
+n <- 2181
+sample_num <- 100000
+
+sample_medians <- numeric(sample_num)
+
+for (i in 1:sample_num) {
+  sample_data <- sample(trips$Duration, size = n, replace = TRUE)
+  sample_medians[i] <- median(sample_data, na.rm = TRUE)
+}
+
+hist(sample_medians, breaks = 50, main = "Sampling Distribution of Sample Median")
+qqnorm(sample_medians)
+qqline(sample_medians)
+
+summary(sample_medians)
+```
+
+# Question 5: Generative AI Tools Used
+
+Tools used: None
+
+# Question 6: Clarifications
+
+(Optional - to be filled if needed)

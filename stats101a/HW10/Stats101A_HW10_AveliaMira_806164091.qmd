@@ -1,0 +1,232 @@
+---
+title: "Stats 101A - Homework 10"
+author: "Avelia Mira"
+format:
+  pdf:
+    include-in-header:
+      - text: |
+          \usepackage{fvextra}
+          \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+editor: visual
+---
+
+## Load libraries & setup
+
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+library(car)
+library(leaps)
+
+births <- read_csv("birthsforHW.csv", show_col_types = FALSE)
+
+# Convert Habit to factor if needed
+if (!is.factor(births$Habit)) births$Habit <- as.factor(births$Habit)
+```
+
+## Homework 10
+
+### 0) Fit the full model to predict baby birth weight
+
+```{r}
+m_full <- lm(weight ~ ., data = births)
+summary(m_full)
+```
+
+- Full model: `weight ~ Gender + Premie + LowBirthWeight + Weeks + Apgar1 + Fage + Mage + Feduc + Meduc + TotPreg + Visits + Marital + Gained + Habit`
+- Fit: $R^2 = 0.5276$, Adjusted $R^2 = 0.5233$.
+- Strong predictors include `LowBirthWeightNot Low`, `Weeks`, `GenderMale`, `Gained`, `HabitSmoker`, `MaritalUnmarried`, and `TotPreg`.
+
+### 1) Assess model validity (Residuals vs Fitted, Q-Q, Scale-Location)
+
+```{r}
+plot(m_full, which = 1:3)
+```
+
+- Based on diagnostics, the full model is not ideal: residual spread and Q-Q tail behavior suggest some non-constant variance and non-normality.
+- This motivates trying a response transformation.
+
+### 2) Confirm/refute trend assessment using marginal model plots
+
+```{r}
+marginalModelPlots(m_full, ~ Weeks + Apgar1 + Fage + Mage + Feduc + Meduc + TotPreg + Visits + Gained)
+```
+
+- Marginal model plots do not indicate severe nonlinearity in trend for the main numeric predictors.
+- The larger issue is variance/normality rather than a strongly wrong mean trend form.
+
+### 3) Check Box-Cox recommendation and usefulness of transforming weight
+
+```{r}
+boxCox(m_full)
+
+# Optional alternative from lecture
+inverseResponsePlot(m_full)
+
+# Example transformed model (if Box-Cox suggests lambda near 0)
+m_transformed <- lm(log(weight) ~ ., data = births)
+
+par(mfrow = c(2, 2))
+plot(m_transformed)
+par(mfrow = c(1, 1))
+```
+
+- Using `log(weight)` improves model behavior; transformed-model fit is higher ($R^2 = 0.6612$, Adjusted $R^2 = 0.6581$) and diagnostics are more stable.
+- I proceed with the transformed model as the more valid option.
+
+### 4) Choose the most valid model and add Habit-specific intercept/slope with Gained
+
+Use `Habit * Gained` to allow:
+- different intercept by smoking habit
+- different slope for `Gained` by smoking habit
+
+```{r}
+m_q4 <- lm(log(weight) ~ . + Habit:Gained, data = births)
+summary(m_q4)
+```
+
+- Chosen working model for this part: `log(weight) ~ . + Habit:Gained`.
+- Note: `Habit` main effect is already included via `.`, and `Habit:Gained` adds the interaction.
+
+### 5) Best subsets on model (4), choose by BIC
+
+```{r}
+# Create model matrix to identify which columns to force in (Habit main effect)
+X_full <- model.matrix(log(weight) ~ . + Habit:Gained, data = births)
+habit_cols <- grep("^Habit", colnames(X_full))
+habit_interaction_cols <- grep(":Habit|Habit:", colnames(X_full))
+habit_main_cols <- setdiff(habit_cols, habit_interaction_cols)
+
+# Force Habit main effect to stay in model (respecting hierarchy)
+force_in_vec <- rep(FALSE, ncol(X_full) - 1)  # Exclude intercept
+if (length(habit_main_cols) > 0) {
+  force_in_vec[habit_main_cols - 1] <- TRUE  # Adjust for intercept
+}
+
+best_sub <- regsubsets(log(weight) ~ . + Habit:Gained, data = births, 
+                       nvmax = 15, method = "exhaustive",
+                       force.in = force_in_vec)
+best_summary <- summary(best_sub)
+
+min_bic_idx <- which.min(best_summary$bic)
+print(paste("Best BIC is at index (number of predictors):", min_bic_idx))
+best_summary$which[min_bic_idx, ]
+
+plot(1:length(best_summary$bic), best_summary$bic, type = "b",
+     xlab = "Model size", ylab = "BIC",
+     main = "Best Subsets: BIC by Model Size")
+```
+
+- BIC-minimizing model index with forced Habit main effect.
+- Final predictors include both `Habit` main effect and `Gained:Habit` interaction (respecting hierarchy).
+
+### 6) Backward stepwise by BIC, compare with best subsets
+
+```{r}
+# Use same force.in vector to maintain hierarchy in backward selection
+bwd_sub <- regsubsets(log(weight) ~ . + Habit:Gained, data = births, 
+                      method = "backward", nvmax = 15,
+                      force.in = force_in_vec)
+bwd_summary <- summary(bwd_sub)
+
+min_bwd_idx <- which.min(bwd_summary$bic)
+bwd_summary$which[min_bwd_idx, ]
+```
+
+- Backward stepwise BIC with forced Habit main effect to respect hierarchy.
+- Compare selected predictors with best subsets approach.
+
+### 7) Fit the chosen best model and interpret effects
+
+```{r}
+# Fit the final model using the predictors selected by backward BIC in Q6
+# Include Habit main effect to respect hierarchy principle
+m_best <- lm(log(weight) ~ Gender + LowBirthWeight + Weeks + Apgar1 + Mage + TotPreg + Marital + Gained + Habit + Habit:Gained,
+             data = births)
+
+summary(m_best)
+formula(m_best)
+```
+
+- Fitted final model:
+  `log(weight) ~ Gender + LowBirthWeight + Weeks + Apgar1 + Mage + TotPreg + Marital + Gained + Habit + Habit:Gained`
+- This model respects the hierarchy principle: both the main effect of `Habit` and the interaction `Habit:Gained` are included.
+- 7a) `Mage` coefficient is positive, so (holding other variables fixed) each additional year of mother age is associated with a small increase in expected baby weight on the log scale.
+- 7b) The `Habit` main effect provides a habit-specific intercept shift, while `Habit:Gained` allows the slope of weight gained to differ by smoking status—both intercept and slope vary by smoking habit.
+
+```{r}
+# Optional helper for smoking effect at average Gained
+mean_gained <- mean(births$Gained, na.rm = TRUE)
+coef_names <- names(coef(m_best))
+coef_names[grepl("Habit", coef_names)]
+mean_gained
+```
+
+### 8) Why are there 1910 fitted values instead of 2000 rows?
+
+```{r}
+nrow(births)
+length(m_best$fitted.values)
+nrow(births) - length(m_best$fitted.values)
+```
+
+`lm()` uses listwise deletion by default; rows with missing values in any used variable are removed.
+
+For this fitted model: `nrow(births) = 2000`, `length(m_best$fitted.values) = 1539`, so `461` observations were removed due to missing data in at least one model variable.
+
+### 9) First five rows removed by `lm`
+
+```{r}
+m_best$na.action
+head(m_best$na.action, 5)
+```
+
+First five removed rows are `3, 9, 13, 14, 16`.
+
+### 10) Identify bad leverage points
+
+Use cutoff: `2*(p+1)/n`, where `n` is the number of observations actually used in the fitted model.
+
+```{r}
+p <- length(coef(m_best)) - 1
+n_actual <- nobs(m_best)  # Use actual n after NA removal
+cutoff <- 2 * (p + 1) / n_actual
+
+leverages <- hatvalues(m_best)
+std_res <- rstandard(m_best)
+bad_idx <- which(leverages > cutoff & abs(std_res) > 2)
+
+bad_leverage_table <- tibble(
+  original_row = as.integer(names(leverages)[bad_idx]),
+  row_after_na_omit = bad_idx,
+  leverage = unname(leverages[bad_idx]),
+  std_resid = unname(std_res[bad_idx])
+)
+
+print(paste("n after NA removal:", n_actual))
+print(paste("p (excluding intercept):", p))
+cutoff
+bad_leverage_table
+```
+
+- Using `nobs(m_best)` to get the correct number of observations after listwise deletion.
+- This ensures the leverage cutoff formula `2*(p+1)/n` uses the actual sample size of the fitted model.
+- Bad leverage points are those with both high leverage (above cutoff) and large standardized residuals (|r| > 2).
+
+### 11) View bad leverage rows correctly after NA removals
+
+```{r}
+births.na <- births[-m_best$na.action, ]
+
+# Correct rows in data with omitted rows removed:
+births.na[bad_idx, ]
+
+# Optional quick summary of unusualness:
+summary(births.na[bad_idx, ])
+```
+
+Explain why these observations might be unusual (extreme covariate values, combinations, or outcomes).
+
+- These rows include unusually extreme birth profiles (for example, very low birth weights like `17`, `32`, `33` ounces and very short gestational ages such as `21–30` weeks), or uncommon combinations of predictors.
+- Such extreme covariate patterns create high leverage, and when paired with large residuals they become bad leverage points.

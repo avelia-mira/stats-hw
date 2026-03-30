@@ -1,0 +1,385 @@
+---
+title: "Stats 101A - Homework 6"
+author: "Avelia Mira"
+format: 
+  pdf:
+    include-in-header:
+      - text: |
+          \usepackage{fvextra}
+          \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+
+editor: visual
+---
+
+## Load libraries & setup
+
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+library(broom)
+setwd("~/Downloads/stats/stats101a/HW6")
+```
+
+## Question 1: Iowa Test Scores
+
+### a) Iowa City schools vs. other schools
+
+Create an indicator variable and fit a linear model to predict performance based on whether or not the school is in Iowa City. Interpret the summary output.
+
+```{r}
+iowa <- read_tsv("iowatest.txt")
+
+iowa <- iowa |>
+  mutate(IsIowaCity = if_else(City == "Iowa City", 1, 0))
+
+# Fit linear model
+model1a <- lm(Test ~ IsIowaCity, data = iowa)
+
+# Summary
+summary(model1a)
+```
+
+Schools in Iowa City score **14.7 points higher** on average (p = 0.000152). The R² = 0.104 shows location explains \~10% of score variation. This difference is statistically significant, indicating Iowa City schools perform better than other cities.
+
+### b) Graphic comparing Iowa City schools to others
+
+```{r}
+# Create boxplot using ggplot
+ggplot(iowa, aes(x = City, y = Test, fill = City)) +
+  geom_boxplot() +
+  labs(title = "Test Scores by City", x = "City", y = "Test Score") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+Iowa City shows a higher median test score than most other cities in the box plot.
+
+### c) Poverty score and test scores
+
+Fit a regression line to predict school test score from poverty score. Is there evidence that poverty is associated with the test score?
+
+```{r}
+# Fit model predicting test score from poverty score
+model1c <- lm(Test ~ Poverty, data = iowa)
+
+# Summary
+summary(model1c)
+```
+
+Poverty is **strongly negatively associated** with test scores: each 1-unit increase in poverty decreases test score by 0.54 points (p \< 0.001). The R² = 0.673 shows poverty explains \~67% of score variation—much stronger than Iowa City. Schools in higher-poverty areas perform significantly worse.
+
+### d) Diagnostic plots interpretation
+
+Interpret the first three diagnostic plots: residuals plot, normal Q-Q plot, and scale-location plot.
+
+```{r}
+# Add diagnostics to the data
+iowa_diag <- iowa |>
+  mutate(
+    fitted = fitted(model1c),
+    residuals = residuals(model1c),
+    std_resid = rstudent(model1c)
+  )
+
+# 1. Residuals vs Fitted
+p1 <- ggplot(iowa_diag, aes(x = fitted, y = residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(title = "Residuals vs Fitted", x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+
+# 2. Normal Q-Q Plot
+p2 <- ggplot(iowa_diag, aes(sample = residuals)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  labs(title = "Normal Q-Q Plot", x = "Theoretical Quantiles", y = "Sample Quantiles") +
+  theme_minimal()
+
+# 3. Scale-Location Plot
+model1c_aug <- augment(model1c)
+p3 <- ggplot(model1c_aug, aes(x = .fitted, y = sqrt(abs(.std.resid)))) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE, color = "red") +
+  labs(title = "Scale-Location", x = "Fitted Values", y = "Sqrt(|Std. Residuals|)") +
+  theme_minimal()
+
+# Display plots
+p1
+p2
+p3
+```
+
+**Residuals vs Fitted:** Residuals scatter randomly around zero with uniform spread, suggesting linearity holds.
+
+**Q-Q Plot:** Points follow the reference line closely (minor trailing at extremes), indicating residuals are approximately normal.
+
+**Scale-Location:** The red line is roughly horizontal, suggesting constant variance across fitted values.
+
+### e) Leverage points
+
+Which point has the highest leverage? Are there any bad leverage points?
+
+```{r}
+# Calculate leverage using tidyverse
+p <- length(coef(model1c))
+n <- nrow(iowa)
+threshold <- 2 * p / n
+
+# Extract indices for sorting
+leverage_vals <- hatvalues(model1c)
+studentized_vals <- rstudent(model1c)
+
+# Create leverage analysis dataframe
+lev_analysis <- tibble(
+  leverage = leverage_vals,
+  studentized = studentized_vals,
+  is_high = leverage > threshold,
+  row_idx = seq_along(leverage)
+) |>
+  bind_cols(iowa) |>
+  arrange(desc(leverage))
+
+# Display highest leverage point
+cat("Threshold for high leverage (2p/n):", round(threshold, 4), "\n\n")
+cat("Highest leverage point:\n")
+print(lev_analysis |> slice(1) |> select(School, City, Poverty, leverage, studentized))
+
+# High leverage points
+cat("\nAll high leverage points:\n")
+print(lev_analysis |> filter(is_high) |> select(School, City, Poverty, leverage))
+```
+
+The highest leverage point is Longfel (Waterloo) with poverty = 99 (most extreme X value). However, **no bad leverage points** exist because Longfel's residual is reasonable and fits the trend well—high leverage alone isn't problematic.
+
+### f) F-test hypotheses and conclusion
+
+State the null and alternative hypotheses for the F-test in the summary output from Question (c). Give the conclusion at 5% significance level.
+
+The null hypothesis, Ho, is β₁ = 0, that poverty score has no effect on test scores.
+
+The alternative hypothesis, Ha, is β₁ ≠ 0, that poverty score DOES affect test scores.
+
+The F-statistic is 269.79, the p-value is 2.2e-16, essentially 0, and we use a significance level of α = 0.05. As such, we reject the null hypothesis at the 5% significance level. We believe there is evidence that that poverty score is significantly associated with test scores.
+
+------------------------------------------------------------------------
+
+## Question 2: Housing Indicators
+
+Load the `indicators.txt` file and fit a model to predict PriceChange from LoanPaymentsOverdue.
+
+```{r}
+#| message: false
+# Load and parse indicators data (requires careful parsing due to file structure)
+indicators_raw <- readLines("indicators.txt")
+indicators_raw <- gsub('\r', '', indicators_raw)
+lines <- strsplit(indicators_raw, "\t")
+data_list <- lapply(lines[-1], function(x) x[x != ""])
+metro_areas <- sapply(data_list, function(x) x[1])
+price_change <- as.numeric(sapply(data_list, function(x) x[2]))
+loan_payments <- as.numeric(sapply(data_list, function(x) x[3]))
+indicators <- data.frame(PriceChange = price_change, LoanPaymentsOverdue = loan_payments)
+rownames(indicators) <- metro_areas
+
+# Fit model
+model2 <- lm(PriceChange ~ LoanPaymentsOverdue, data = indicators)
+summary(model2)
+```
+
+Each 1% increase in loan payments is associated with a 2.25% **decrease** in price change (p = 0.024). The R² = 0.279 shows loan payments explain \~28% of price variation. The model is statistically significant.
+
+### a) Trend and constant variance (Residuals vs Fitted plot)
+
+Using the first plot from `plot.lm()`, comment on whether the trend component is fit correctly and whether the constant variance condition appears to hold.
+
+```{r}
+# Residuals vs Fitted plot using ggplot
+model2_diag <- augment(model2)
+
+ggplot(model2_diag, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(title = "Residuals vs Fitted Values", x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+```
+
+The residuals show a **curved U-pattern** (negative → positive → negative), indicating the linear trend is misspecified. Variance also increases at higher fitted values (heteroscedasticity). Both the trend and constant variance assumptions **fail**.
+
+### b) Q-Q plot comparison with simulated normal data
+
+Generate 19 Q-Q norm plots from a N(0,1) distribution. Compare the Q-Q norm plot from the data to this collection.
+
+```{r}
+# Q-Q plot using ggplot
+ggplot(model2_diag, aes(sample = .std.resid)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  labs(title = "Normal Q-Q Plot", x = "Theoretical Quantiles", y = "Sample Quantiles") +
+  theme_minimal()
+
+# Generate simulated Q-Q plots for comparison
+set.seed(123)
+n_sims <- nrow(indicators)
+
+# Create a tibble of simulated data
+simulated_data <- tibble(
+  sim_id = rep(1:19, each = n_sims),
+  residuals = c(replicate(19, rnorm(n_sims, mean = 0, sd = 1)))
+)
+
+# Plot simulated Q-Q plots
+ggplot(simulated_data, aes(sample = residuals)) +
+  stat_qq(size = 2) +
+  stat_qq_line(color = "red") +
+  facet_wrap(~sim_id, ncol = 5) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 7), axis.text.y = element_text(size = 7))
+```
+
+Simulated Q-Q plots follow the reference line closely (normal), while the actual data shows a **systematic S-curve**, deviating significantly in the tails. The errors are **not normally distributed**.
+
+### c) Validity - Normal distribution of errors
+
+Comment on the validity of the model with respect to the condition that the errors are Normally distributed.
+
+The S-shaped Q-Q plot indicates residuals are **not normally distributed**. This violates a key linear regression assumption and makes hypothesis tests and confidence intervals unreliable.
+
+### d) Scale-Location plot - constant variance
+
+Using the Scale-Location plot, comment on model validity with respect to the constant variance condition.
+
+```{r}
+# Scale-Location plot using ggplot
+ggplot(model2_diag, aes(x = .fitted, y = sqrt(abs(.std.resid)))) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE, color = "red") +
+  labs(title = "Scale-Location", x = "Fitted Values", y = "Sqrt(|Standardized Residuals|)") +
+  theme_minimal()
+```
+
+The red line follows a U-shaped pattern—variance is lower at mid-range and higher at extremes. This **non-constant variance (heteroscedasticity)** violates the constant variance assumption, making standard errors unreliable and invalidating hypothesis tests.
+
+### e) High leverage points
+
+Identify any high leverage points (which row are they in). State the criteria you are using.
+
+```{r}
+# Calculate leverage using tidyverse
+p2 <- length(coef(model2))
+n2 <- nrow(indicators)
+threshold2 <- 2 * p2 / n2
+
+# Create leverage analysis
+lev_analysis2 <- model2_diag |>
+  mutate(
+    leverage = .hat,
+    studentized = rstudent(model2),
+    is_high = leverage > threshold2,
+    metro_area = rownames(indicators)
+  ) |>
+  arrange(desc(leverage)) |>
+  select(metro_area, leverage, PriceChange, LoanPaymentsOverdue, studentized, is_high)
+
+cat("Threshold for high leverage (2p/n):", round(threshold2, 4), "\n\n")
+cat("High leverage points:\n")
+print(lev_analysis2 |> filter(is_high) |> select(metro_area, leverage, PriceChange, LoanPaymentsOverdue))
+
+cat("\nTop 3 leverage points:\n")
+print(lev_analysis2 |> slice(1:3) |> select(metro_area, leverage))
+```
+
+Using threshold 2p/n = 0.222, high leverage points are: **MiamiFt.Lauderdale** (0.285, highest loan payments) and **Seattle** (0.240, lowest loan payments).
+
+### f) Bad leverage points
+
+Identify any bad leverage points (if there are any). If there are none, say so.
+
+```{r}
+# Check for bad leverage points using filter
+bad_leverage2 <- lev_analysis2 |>
+  filter(is_high == TRUE & abs(studentized) > 2)
+
+if (nrow(bad_leverage2) > 0) {
+  cat("Bad leverage points found:\n")
+  print(bad_leverage2 |> select(metro_area, leverage, studentized))
+} else {
+  cat("NO bad leverage points identified.\n")
+  cat("All high leverage points have reasonable residuals (|residual| < 2).\n")
+}
+```
+
+Although MiamiFt.Lauderdale and Seattle have high leverage, **no bad leverage points** exist because their residuals fit the trend well.
+
+### g) High influence points (Cook's Distance)
+
+Identify any points with high influence, as measured by Cook's Distance. Explain why you think these are high.
+
+```{r}
+# Calculate Cook's Distance using tidyverse
+threshold_cook <- 4 / n2
+
+# Create influence analysis
+inf_analysis <- model2_diag |>
+  mutate(
+    cooks_d = cooks.distance(model2),
+    is_high = cooks_d > threshold_cook,
+    metro_area = rownames(indicators)
+  ) |>
+  arrange(desc(cooks_d)) |>
+  select(metro_area, cooks_d, is_high, everything())
+
+cat("Threshold for high influence (4/n):", round(threshold_cook, 4), "\n\n")
+cat("High influence points (Cook's D >", round(threshold_cook, 4), "):\n")
+print(inf_analysis |> filter(is_high) |> select(metro_area, cooks_d))
+
+cat("\nTop 3 most influential points:\n")
+print(inf_analysis |> slice(1:3) |> select(metro_area, cooks_d))
+```
+
+Using threshold 4/n = 0.222, **Seattle** is high influence (Cook's D = 0.495). It has extreme X value (1.65% loan payments) and large residual (6.9% price change vs \~0.8% fitted), making it highly influential. Removing Seattle would substantially change model parameters.
+
+### h) Influence vs. Leverage - In your own words
+
+What do influence and leverage measure?
+
+**Leverage** measures how extreme a point's X value is—its *potential* to affect the model. **Influence** (Cook's Distance) measures the *actual* impact—combining both leverage and residual size. High leverage doesn't guarantee influence; influence requires both extreme X *and* poor fit. Seattle exemplifies this: high leverage + large residual = high influence.
+
+------------------------------------------------------------------------
+
+## Question 3: Airfare Data Analysis (Chapter 3, Problem 1)
+
+The data file airfares.txt on the book web site gives the one-way airfare (in US dollars) and distance (in miles) from city A to 17 other cities in the US. Interest centers on modeling airfare as a function of distance. The first model fit to the data was
+
+Given below and in Figure 3.41 is some output from fitting model (3.7).
+
+### R Output from Model (3.7)
+
+```         
+Call:
+lm(formula = Fare ~ Distance)
+
+Coefficients:
+                Estimate    Std. Error    t value    Pr(>|t|)
+(Intercept)     48.971770   4.405493      11.12      1.22e-08 ***
+Distance        0.219687    0.004421      49.69      <2e-16 ***
+
+Signif. codes: 0'***'0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 10.41 on 15 degrees of freedom
+Multiple R-Squared: 0.994, Adjusted R-squared: 0.9936
+F-statistic: 2469 on 1 and 15 DF, p-value: < 2.2e-16
+```
+
+**Model Equation:** $$\widehat{\text{Fare}} = 48.97 + 0.220 \times \text{Distance}$$
+
+**Interpretation of Coefficients:** - **Intercept (48.97):** Base fare (intercept) is approximately \$48.97. - **Distance coefficient (0.220):** Each additional mile increases fare by approximately \$0.22. - **t-statistic (49.69):** Extremely large, indicating Distance is highly significant. - **p-value (\< 2e-16):** Essentially zero — Distance coefficient is highly statistically significant.
+
+### (a) Critique of the analyst’s conclusion
+
+The analyst concluded: “The regression coefficient of the predictor variable, Distance is highly statistically significant and the model explains 99.4% of the variability in the Y-variable, Fare. Thus model (1) is a highly effective model for both understanding the effects of Distance on Fare and for predicting future values of Fare given the value of the predictor variable, Distance.”
+
+This conclusion is **overly optimistic**. Statistical significance and a high $R^2$ do not guarantee that the model form is correct or that predictions are reliable. The diagnostic plot (Figure 3.41) shows a systematic curved pattern in the residuals versus Distance, indicating **nonlinearity** and **model misspecification**. Because the residuals are not randomly scattered around zero, the straight-line model produces **systematic bias** (underpredicting short and long distances, overpredicting mid-range distances). As a result, the model is **not** “highly effective” for understanding the true relationship or for prediction across the range of distances. Good inference requires checking assumptions, not just $R^2$ and p-values.
+
+### (b) Fit of the straight-line model and how to improve it
+
+No, the straight-line model **fails**—residuals show clear curvature. Add a **quadratic term** or use **log transformation** to capture the nonlinear relationship. These would yield randomly scattered residuals and better predictions.

@@ -1,0 +1,315 @@
+---
+title: "Stats 102A - Homework 3 - Output File"
+author: "Avelia Mira"
+format: pdf
+---
+
+Copyright Miles Chen, Do not post, share, or distribute without permission.
+
+To receive full credit the functions you write must pass all tests. We may conduct further tests that are not included on this page as well.
+
+# Academic Integrity Statement
+
+By including this statement, I, **Avelia Mira**, declare that all of the work in this assignment is my own original work.
+
+At no time did I use an AI tool to generate or debug my solutions.
+
+At no time did I look at the code of other students nor did I search for code solutions.
+
+I understand that forbidden AI usage or plagiarism on any single part of this assignment will result in a 0 for the entire assignment.
+
+## Part 1. Basic dplyr exercises
+
+Install the package `fueleconomy` and load the dataset `vehicles`. Answer the following questions.
+
+```{r exc2data, error = TRUE, message = FALSE}
+library(fueleconomy) # run install.packages("fueleconomy") if necessary
+library(tidyverse)
+data(vehicles)
+# setwd("./stats102a/HW3")
+```
+
+a. How many unique vehicle makers (variable `make`) are included in the dataset? 
+
+```{r}
+# we can just pull the vehicle makes, do unique(), then pipe it straight into length()
+vehicles |>
+  pull(make) |>
+  unique() |>
+  length()
+```
+
+b. How many vehicles made in 2014 are represented in the dataset?
+
+```{r}
+# we can filter for year 2014 and pipe into nrow()
+vehicles |>
+  filter(year == 2014) |>
+  nrow()
+```
+
+c. For the year 2014, what was the average city mpg (gas mileage) for all `Compact Cars`? What was the average city mpg for `Midsize Cars` in 2014?
+
+```{r}
+# we can filter for year and class, then pull the the column cty, then take the mean
+vehicles |>
+  filter(year == 2014, class == "Compact Cars") |>
+  pull(cty) |>
+  mean()
+
+vehicles |>
+  filter(year == 2014, class == "Midsize Cars") |>
+  pull(cty) |>
+  mean()
+```
+
+d. For the year 2014, compare makers of `Midsize Cars`. Find the average city mpg of midsize cars for each manufacturer. For example, in 2014, Acura has 5 midsize cars with an average city mpg of 20.6, while Audi has 12 midsize cars with an average city mpg of 19.08. 
+
+Produce a table showing the city mpg for 2014 midsize cars for the 27 manufacturers represented in the table. Arrange the results in descending order, so that the manufacturer with the highest average mpg will be listed first.
+
+```{r}
+# write your code here, the output displayed should answer the question.
+# we can filter for 2014 and midsize cars, group by make, then summarise based on mean(cty) which represents the avg city mpg, then arrange it descending using the minus sign. learnt it quite recently for a different unit by accident, hey.
+vehicles |>
+  filter(year == 2014, class == "Midsize Cars") |>
+  group_by(make) |>
+  summarise(average_city_mpg = mean(cty)) |>
+  arrange(-average_city_mpg)
+```
+
+e. Finally, for the years 1994, 1999, 2004, 2009, and 2014, find the average city mpg of `Midsize Cars` for each manufacturer for each year. Use tidyr to transform the resulting output so each manufacturer has one row, and five columns (a column for each year). Print out all the rows of the resulting tibble. You can use `print(tibble, n = 36)` to print 36 rows of a tibble.
+
+```{r}
+
+# pipe vehicles into a filter for midsize cars with years specifically 1994, 1999, 2004, 2009, and 2014, group them by make and year, then summarise them accordingly, drop the grouping structure, create a wide format, then print the rows the way it's requested
+vehicles |>
+  filter(class == "Midsize Cars", year %in% c(1994, 1999, 2004, 2009, 2014)) |>
+  
+  group_by(make, year) |>
+  summarise(average_city_mpg = mean(cty), .groups = "drop") |>
+  
+  pivot_wider(names_from = year, values_from = average_city_mpg) |>
+  
+  print(n = 36)
+```
+
+
+## Part 2. More dplyr
+
+*Make sure your final output shows the desired average number of days between visits.*
+
+```{r dplyr_pt2}
+load("dr4.Rdata")
+
+# here we want to lengthen the data by increasing the number of rows and decreasing the number of columns with pivot_longer and chuck out the NA values. next we want to arrange by id and date, then group by id, then create a new column of days_between as the date subtracted the lag of the date, filter the NA, then ungroup, then summarise the average_days_between_visits using the mean function.
+dr4 |>
+  pivot_longer(cols = starts_with("visit"), 
+               names_to = "visit_number", 
+               values_to = "date",
+               values_drop_na = TRUE) |>
+  arrange(id, date) |> 
+  group_by(id) |> 
+  mutate(days_between = as.numeric(date - lag(date))) |> 
+  filter(!is.na(days_between)) |> 
+  ungroup() |> 
+  summarise(average_days_between_visits = mean(days_between))
+```
+
+## Part 3. Scrape baseball-reference.com with rvest
+
+```{r baseball_rvest, error = TRUE, message = FALSE}
+library(rvest)
+library(polite)
+library(dplyr) # Needed for bind_rows and mutate
+
+# Open a polite session.
+session <- bow("http://www.baseball-reference.com/teams/",
+  user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+  force = TRUE
+) 
+
+# Scrape the content of the page and store it in an object teampage.
+# There's no need to open another session.
+teampage <- session |> 
+  scrape(content = "text/html; charset=UTF-8")
+
+# we can extract the team names and urls here
+team_html_nodes <- teampage |> 
+  html_nodes("#teams_active .left a")
+
+# here we can extract the team names and the links
+team_names <- team_html_nodes |> html_text()
+team_urls  <- team_html_nodes |> html_attr("href")
+
+# we will initialise a list in order to store results, because it is faster to fill a list than grow a a data frame row by row. and im lazy to wait
+results_list <- list()
+
+for (i in 1:length(team_urls)) {
+  
+  # here we wish to scrape the data
+  team_session <- session |> 
+    nod(path = team_urls[i]) |>
+    scrape(content = "text/html; charset=UTF-8")
+  
+  # next we'll go ahead and scrape the table as well
+  franchise_data <- team_session |>
+    html_node("#franchise_years") |>
+    html_table(header = TRUE)
+  
+  # next i wanna clean and standardise the data
+  franchise_data <- franchise_data |>
+    mutate(
+      current_name = team_names[i],
+      # i had an issue with this not being a character so i had to force it as a character
+      GB = as.character(GB) 
+    )
+  
+  # finally we can store the data
+  results_list[[i]] <- franchise_data
+  
+  # i had this just to verify that it was scraping properly
+  # print("Scraped:", team_names[i])
+}
+
+# now we can bind the rows together and combine them
+baseball <- bind_rows(results_list)
+
+
+dim(baseball)
+print(baseball, n = 10)
+```
+
+**Some light text clean up**
+
+
+```{r baseball_cleanup, error = TRUE, echo = FALSE}
+# you should not need to modify this code, but you will need to run it.
+library(stringr)
+# This code checks to see if text in table has a regular space character.
+# The text from the website uses a non-breaking space, so we expect there to be 
+# a mismatch. I convert to raw because when displayed on screen, we cannot see 
+# the difference between a regular breaking space and a non-breaking space.
+all.equal(charToRaw(baseball$Tm[1]), charToRaw("Arizona Diamondbacks"))
+
+# Identify which columns are character columns
+character_columns <- which(lapply(baseball, typeof) == "character")
+
+# This loop: for each character column, convert to UTF-8
+# then replace the non-breaking space with a regular space.
+for(i in character_columns) {
+    baseball[[i]] <- str_conv(baseball[[i]], "UTF-8")
+    baseball[[i]] <- str_replace_all(baseball[[i]],"\\s"," ")
+}
+
+# We check to see if the conversion worked.
+# The following statement checks to see if the characters of the first team
+# name is "Arizona Diamondbacks" with a regular space (vs non-breaking space).
+# If the following statement returns TRUE, then it worked.
+all.equal(charToRaw(baseball$Tm[1]), charToRaw("Arizona Diamondbacks"))
+```
+
+## Part 4. dplyr to summarise the baseball data
+
+```{r baseball_dplyr}
+# Enter your r code here
+# Your final line of code here should print the summary table in the report
+# Be sure to print all 30 rows
+# All requested columns must appear in the output to receive full credit.
+
+baseball |>
+  # we wanted to filter year [2001,2025]
+  filter(as.numeric(Year) >= 2001, as.numeric(Year) <= 2025) |>
+  
+  # piped into a group_by
+  group_by(current_name) |>
+  
+  # then piped into a summarise function
+  summarise(
+    TW = sum(as.numeric(W), na.rm = TRUE),
+    TL = sum(as.numeric(L), na.rm = TRUE),
+    TR = sum(as.numeric(R), na.rm = TRUE),
+    TRA = sum(as.numeric(RA), na.rm = TRUE)
+  ) |>
+  
+  # then we can mutate, add the win_percentage
+  mutate(win_percentage = TW / (TW + TL)) |>
+  
+  # rename columns with descriptive names
+  rename(
+    "total wins (TW)" = TW,
+    "total losses (TL)" = TL,
+    "total runs scored (TR)" = TR,
+    "total runs allowed (TRA)" = TRA,
+    "total win percentage (wins / (wins + losses))" = win_percentage
+  ) |>
+  
+  # then arrange that in a descending manner
+  arrange(-`total win percentage (wins / (wins + losses))`) |>
+  
+  # then print the top 30 rows
+  print(n = 30)
+```
+
+## 5. Regular expressions to extract values in the managers Column
+
+
+```{r baseball_regex}
+library(stringr)
+library(dplyr)
+library(tidyr)
+
+# regex is scary but basically: grabs the name, skips the space/paren, then grabs the two numbers for wins/losses. hope this works lol
+# ([A-Z]\\.[^\\(]*)
+# manager name, matches a capital, a dot, and then any character which isn't an open parenthesis
+# \\s*\\(
+# matches whitespace, then parenthesis
+# (\\d+)
+# matches wins by grabbing digits
+# -
+# hyphen
+# (\\d+)
+# matches losses by digits
+# \\)
+# closing parenthesis
+
+matches_list <- str_match_all(baseball$Managers, "([A-Z]\\.[^\\(]*) \\((\\d+)-(\\d+)\\)")
+
+# we basically want to convert the matches into one big data frame and stack the matrices in each row into one big matrix
+manager_df <- do.call(rbind, matches_list) |>
+  as.data.frame() |>
+  setNames(c("Full_String", "manager", "wins", "losses"))
+
+# this is how we clean the data or whatever
+manager_summary <- manager_df |>
+  mutate(
+    # here we can clean the trailing spaces just in case with str_trim, such as if "Joe Bruin" was actually "Joe Bruin ", we want to cut off that extra space
+    manager = str_trim(manager),
+    wins = as.numeric(wins),
+    losses = as.numeric(losses)
+  ) |>
+  # we can group by manager to combine the records
+  group_by(manager) |>
+  summarise(
+    total_wins_across_career = sum(wins),
+    total_losses_across_career = sum(losses)
+  ) |>
+  # we can calculate the total games and win percentage using the formulas below
+  mutate(
+    total_games_managed = total_wins_across_career + total_losses_across_career,
+    win_percentage = total_wins_across_career / total_games_managed
+  ) |>
+  # reordered the columns in the manner that was wanted by the assignent
+  select(manager, total_games_managed, total_wins_across_career, total_losses_across_career, win_percentage) |>
+  rename(
+    "Manager's name (First initial and Last Name)" = manager,
+    "Total number of games managed" = total_games_managed,
+    "Total number of wins across career" = total_wins_across_career,
+    "Total number of losses across career" = total_losses_across_career,
+    "Total win percentage" = win_percentage
+  ) |>
+  # sorted descending by total games
+  arrange(-`Total number of games managed`)
+
+# we print the first 15 rows as requested
+print(manager_summary, n = 15)
+```

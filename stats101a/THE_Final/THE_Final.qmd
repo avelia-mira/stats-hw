@@ -1,0 +1,264 @@
+---
+title: "Stats 101A - Take-Home Final Exam"
+author: "Avelia Mira"
+format: 
+  pdf:
+    pdf-engine: pdflatex
+    include-in-header:
+      - text: |
+          \usepackage{fvextra}
+          \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+          
+editor: visual
+---
+
+# Q1 Variance Inflation and Model Fitting
+
+This exam is based on a dataset comprised of characteristics of various LEGO sets. The data were scraped by Profs. Laura Ziegler and Anna Peterson at Iowa State from the website brickset.com. We will build a linear model that describes potential associations between the retail price and a set of predictors.
+
+**Instructions:** Remove the variable Set_Name and fit the full model: price as a function of all available predictors. Do not carry out any transformations unless explicitly told to do so.
+
+## Q1.1: Variance Inflation Factors
+
+Identify three predictors in the full model that have "high" variance inflation factors.
+
+**How to answer:** Look at the output from the `vif(m_full)` command. Find the three variables that have a VIF value greater than 5. List their names here.
+
+**Answer:** Pieces, Unique_Pieces, weight
+
+## Q1.2: P-value Change
+
+The p-value for the t-test associated with Unique_Pieces has a large p-value (approx. 0.8). Suppose we refit the model but remove weight. How will the p-value for Unique_Pieces likely change?
+
+**Options:** - The p-value will increase. - The p-value will decrease. - The p-value will stay the same.
+
+**Answer:** **The p-value will decrease.**
+
+## Q1.3: Explanation
+
+Explain your answer to Q1.2 without refitting the model with weight removed.
+
+**Answer:** Variance Inflation Factor (VIF) measures how severe the problem of collinearity is between predictor variables in a model. When variables are highly correlated (collinear), it inflates the variance, and therefore the standard error, of their estimated coefficients. Because the t-statistic is calculated by dividing the estimated slope by its standard error, an inflated standard error mathematically forces the t-statistic to become smaller. Removing the correlated variable `weight` reduces the collinearity for `Unique_Pieces`, which decreases its standard error, increases its t-statistic, and ultimately results in a smaller p-value.
+
+## Q1.4: Code for Question 1
+
+```{r q1-code}
+# Load necessary libraries
+library(tidyverse)
+library(car)
+
+# Load data, remove Set_Name, and drop missing values to ensure equal sample sizes
+lego <- read_csv("lego.csv")
+lego_clean <- lego |>
+  select(-Set_Name) |> 
+  drop_na()  # This ensures both models have the exact same rows!
+
+# Q1.1 & Q2: Fit the full model and check VIF
+m_full <- lm(price ~ ., data = lego_clean)
+summary(m_full)
+vif(m_full)
+
+# Q2: Fit reduced model
+m_reduced <- lm(price ~ Size + Pieces + Minifigures + Pages, data = lego_clean)
+anova(m_reduced, m_full)
+```
+
+# Q2 Hypothesis Test for Joint Significance
+
+Carry out the hypothesis test that weight and Unique_Pieces are jointly significant. That is, adding (or removing) both of them together has a statistically significant impact on the goodness of fit.
+
+$$H_0: E(Y \mid X) = \beta_0 + \beta_1 \cdot \text{Size} + \beta_2 \cdot \text{Pieces} + \beta_3 \cdot \text{Minifigures} + \beta_4 \cdot \text{Pages}$$
+
+$$H_a: E(Y \mid X) = \beta_0 + \beta_1 \cdot \text{Size} + \beta_2 \cdot \text{Pieces} + \beta_3 \cdot \text{Minifigures} + \beta_4 \cdot \text{Pages} + \beta_5 \cdot \text{Unique\_Pieces} + \beta_6 \cdot \text{weight}$$
+
+## Q2.1: F-Statistic Value
+
+What is the value of the F-Statistic for this test?
+
+**How to answer:** Look at the `anova(m_reduced, m_full)` output from Q1.4. Look for the row corresponding to the full model and find the column labeled `F`. This is your F-statistic.
+
+**Answer:** 238.89
+
+## Q2.2: Statistical Decision
+
+What decision do you make, using a significance level of $\alpha = 0.05$?
+
+**Options:** - Reject the null and conclude that at least one of weight and Unique_Pieces are significant. - Fail to reject the null; there is insufficient evidence to conclude that at least one of weight and Unique_Pieces are significant.
+
+**How to answer:** Look at the p-value column (`Pr(>F)`) in your `anova()` output. If the p-value is less than 0.05, choose the first option (reject the null). If the p-value is greater than or equal to 0.05, choose the second option (fail to reject the null).
+
+**Answer:** Reject the null and conclude that at least one of weight and Unique_Pieces are significant.
+
+## Q2.3: Code for Question 2
+
+```{r q2-code}
+# Fit the full model
+m_full <- lm(price ~ ., data = lego_clean)
+
+# Fit the reduced model (without weight and Unique_Pieces)
+m_reduced <- lm(price ~ Size + Pieces + Minifigures + Pages, data = lego_clean)
+
+# Conduct Partial F-test
+anova(m_reduced, m_full)
+```
+
+The `anova(m_reduced, m_full)` command conducts a Partial F-test comparing the residual sums of squares between the two models.
+
+# Q3 Best Model Selection
+
+Assuming model validity, find the model that balances the trade-off between complexity and goodness of fit using BIC.
+
+## Q3.1: Number of Variables
+
+How many variables should there be in a model that minimizes the BIC?
+
+**Answer:** 3
+
+## Q3.2: Variables by Name
+
+Identify these variables by name.
+
+**Answer:** Size, Pages, weight
+
+## Q3.3: Interpretation of Pages Coefficient
+
+Fit the best model you identified in Q3.2 and write an interpretation of the slope for Pages. This should be no more than two, and ideally one, sentence long.
+
+**Interpretation Template:** "Holding all other variables constant, for every 1-unit increase in Pages, the estimated mean price of the LEGO set changes by \[Insert Estimate\] dollars."
+
+**Answer:** Holding all other variables constant, for every 1-unit increase in Pages, the estimated mean price of the LEGO set decreases by approximately 0.047 dollars.
+
+## Q3.4: Code for Question 3
+
+```{r q3-code}
+library(leaps)
+
+# Run best subsets on the full model
+best_sub <- regsubsets(price ~ ., data = lego_clean, nvmax = 15, method = "exhaustive")
+best_summary <- summary(best_sub)
+
+# Find the model that minimizes BIC
+min_bic_idx <- which.min(best_summary$bic)
+print(paste("Number of variables minimizing BIC:", min_bic_idx))
+
+# Identify the variables by name
+best_summary$which[min_bic_idx, ]
+
+# Plot BIC values
+plot(1:length(best_summary$bic), best_summary$bic, type = "b",
+     xlab = "Model size", ylab = "BIC",
+     main = "Best Subsets: BIC by Model Size")
+
+# Fit the best model using the variables identified above
+# Based on Q3.2: Size, Pages, weight
+m_best <- lm(price ~ Size + Pages + weight, data = lego_clean)
+summary(m_best)
+```
+
+# Q4 Box-Cox Transformation
+
+Investigate which transform of price would be optimal according to a Box-Cox Transform. Use the full model: `lm(price ~ ., data = lego_clean)`.
+
+## Q4.1: Optimal Lambda Value
+
+According to the Box-Cox transform, what is the optimal "rounded" response value for $\lambda$?
+
+**How to answer:** Look at the output of `summary(powerTransform(m_full))`. Look under the column titled **`Rounded Pwr`**. That number is your optimal rounded response value for $\lambda$. (For example: if it is 0, the optimal transform is `log(price)`; if it is 0.5, it is `sqrt(price)`.)
+
+**Answer:** 0.62
+
+## Q4.2: Improvement in Trend Component
+
+Does this transformation improve the validity of the trend component? Answer yes or no and explain.
+
+**How to answer (mathematical check):** Use a formal functional-form test such as the Ramsey RESET test on both models. If the transformed model has a larger p-value (closer to non-significance), that is evidence of improved trend/linearity.
+
+**Answer:** **No.** Using the Ramsey RESET test, the original model has $F=8.385$ with $p=2.73\times 10^{-4}$, while the transformed model has $F=133.481$ with $p=1.31\times 10^{-44}$. Both reject correct functional form, and the transformed model is more strongly rejected, so there is no mathematical evidence of trend-component improvement.
+
+## Q4.3: Improvement in Normality Condition
+
+Does this transformation improve the validity of the Normality condition? Answer yes or no and explain.
+
+**How to answer (mathematical check):** Compare formal normality diagnostics (e.g., Shapiro-Wilk) and distribution shape metrics (skewness, kurtosis) for model residuals.
+
+**Answer:** **Yes, partially.** Shapiro-Wilk improves from $W=0.7758$ ($p=1.11\times 10^{-22}$) in the original model to $W=0.8953$ ($p=1.17\times 10^{-15}$) in the transformed model. Residual skewness drops from $1.128$ to $0.622$, and kurtosis drops from $15.287$ to $8.576$. Normality is still rejected, but the transformed residuals are mathematically closer to normal.
+
+## Q4.4: Improvement in Constant Variance Condition
+
+Does this transformation improve the validity of the constant variance condition? Answer yes or no and explain.
+
+**How to answer (mathematical check):** Compare a formal heteroskedasticity test (e.g., the Breusch-Pagan score test via `ncvTest`) between models.
+
+**Answer:** **Yes, partially.** The score test statistic decreases from $\chi^2=689.69$ ($p=5.21\times 10^{-152}$) in the original model to $\chi^2=242.21$ ($p=1.30\times 10^{-54}$) in the transformed model. Heteroskedasticity is still statistically significant, but the severity is substantially reduced after transformation.
+
+## Q4.5: Code for Question 4
+
+```{r q4-code}
+library(car)
+library(lmtest)
+library(tidyr)
+
+# 1. Find the optimal Box-Cox transformation parameter
+summary(powerTransform(m_full))
+
+# 2. Fit the new transformed model 
+# Based on lambda = 0.62, use price^0.62 transformation
+m_trans <- lm(I(price^0.62) ~ ., data = lego_clean)
+
+# 3. Mathematical diagnostics (instead of visual-only checks)
+
+# 3a) Trend/functional form: Ramsey RESET
+reset_full <- resettest(m_full, power = 2:3, type = "fitted")
+reset_trans <- resettest(m_trans, power = 2:3, type = "fitted")
+reset_full
+reset_trans
+
+# 3b) Normality: Shapiro-Wilk + shape metrics
+sw_full <- shapiro.test(resid(m_full))
+sw_trans <- shapiro.test(resid(m_trans))
+
+skewness <- function(x) {
+  m <- mean(x)
+  s <- sd(x)
+  mean((x - m)^3) / s^3
+}
+
+kurtosis <- function(x) {
+  m <- mean(x)
+  s <- sd(x)
+  mean((x - m)^4) / s^4
+}
+
+normality_tbl <- data.frame(
+  model = c("original", "transformed"),
+  shapiro_W = c(unname(sw_full$statistic), unname(sw_trans$statistic)),
+  shapiro_p = c(sw_full$p.value, sw_trans$p.value),
+  skewness = c(skewness(resid(m_full)), skewness(resid(m_trans))),
+  kurtosis = c(kurtosis(resid(m_full)), kurtosis(resid(m_trans)))
+)
+normality_tbl
+
+# 3c) Constant variance: score test (Breusch-Pagan type)
+ncv_full <- ncvTest(m_full)
+ncv_trans <- ncvTest(m_trans)
+ncv_full
+ncv_trans
+
+# 4. Optional visual diagnostics for supporting context
+par(mfrow = c(2, 3))
+plot(m_full, which = 1:3, main = "Original Model")
+plot(m_trans, which = 1:3, main = "Transformed Model")
+par(mfrow = c(1, 1))
+```
+
+# Q5 Assumptions
+
+If you had to make any assumptions for any ambiguously worded questions, please explain here.
+
+**Answer:** *(No assumptions needed; all questions are clearly specified.)*
+
+# Q6 AI Tools Used
+
+If you used AI, please state which AI models you used and where and how you used them. If none, write "none".
+
+**Answer:** *(Fill in with your AI disclosure if applicable.)*

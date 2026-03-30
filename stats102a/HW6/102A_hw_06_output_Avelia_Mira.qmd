@@ -1,0 +1,441 @@
+---
+title: "Stats 102A - Homework 6 - Output File"
+author: "Avelia Mira"
+format: pdf
+---
+
+Homework questions and prompts copyright Miles Chen, Do not post, share, or distribute without permission.
+
+
+# Part 1
+
+### Explain what a p-value is and how a researcher should use it. (150 words or less)
+
+Based on the video, a p-value shows how data aligns with a specific model but does not measure the probability that a hypothesis is true nor does it mean the data occurred purely by random chance. When using p-values, researchers should avoid strict thresholds such as 0.05, contextualize that a p-value near 0.05 offers only weak evidence against the null hypothesis, to ensure transparency against cherry-picking or p-hacking, consider priors, and separate significances. In the video, we saw that the speaker was trying to replicate experiments to estimate true effect sizes and priors of null hypotheses while accounting for publication bias and treated unpublished findings as missing data, following the advice I mentioned earlier. 
+
+# Part 2
+
+## Randomization test for numeric data
+
+```{r}
+# Data credit: David C. Howell
+# `no_waiting` is a vector that records the time it took a driver to leave the 
+# parking spot if no one was waiting for the driver
+no_waiting <- c(36.30, 42.07, 39.97, 39.33, 33.76, 33.91, 39.65, 84.92, 40.70, 39.65,
+39.48, 35.38, 75.07, 36.46, 38.73, 33.88, 34.39, 60.52, 53.63, 50.62)
+
+# `waiting` is a vector that records the time it takes a driver to leave if
+# someone was waiting on the driver
+waiting <- c(49.48, 43.30, 85.97, 46.92, 49.18, 79.30, 47.35, 46.52, 59.68, 42.89,
+49.29, 68.69, 41.61, 46.81, 43.75, 46.55, 42.33, 71.48, 78.95, 42.06)
+
+mean(waiting)
+mean(no_waiting)
+obs_dif <- mean(waiting) - mean(no_waiting)
+```
+
+### Randomization test
+
+```{r}
+# pool all the data together
+pooled_times <- c(waiting, no_waiting)
+n_wait <- length(waiting)
+
+# set the number of permutations to perform
+k <- 10000 
+
+# pre-allocate a numeric vector of length k instead of growing it
+differences <- rep(NA, k) 
+
+# 67 haha
+set.seed(67)
+
+for (i in seq_len(k)) {
+  # shuffle the pooled data
+  shuffled <- sample(pooled_times)
+  
+  # split the shuffled data into the two groups based on their original sizes
+  sim_wait <- shuffled[1:n_wait]
+  sim_no_wait <- shuffled[(n_wait + 1):length(pooled_times)]
+  
+  # calculate and store the simulated difference in means
+  differences[i] <- mean(sim_wait) - mean(sim_no_wait)
+}
+
+# the prompt asks for the empirical p-value using the direct ratio r / k.
+# we count how many simulated differences are >= our observed difference
+r <- sum(differences >= obs_dif)
+p_value_rand <- r / k
+
+cat("Observed Difference:", obs_dif, "\n")
+cat("Empirical p-value (Randomization Test):", p_value_rand, "\n")
+```
+
+
+### Comparison to traditional t-test
+
+```{r}
+# conduct a two-sample independent t-test
+# we use alternative = "greater" because our HA is that waiting > no_waiting
+t_test_results <- t.test(waiting, no_waiting, alternative = "greater")
+
+print(t_test_results)
+```
+
+
+# Part 3
+
+## Another Randomization test for numeric data
+
+### Exploratory Analysis
+
+```{r, message = FALSE}
+library(tidyverse)
+
+# load the data
+url <- "https://raw.githubusercontent.com/zief0002/comparing-groups/master/data/AfterSchool.csv"
+after_school <- read_csv(url)
+
+# convert Treatment to a factor for cleaner grouping and plotting
+after_school <- after_school |>
+  mutate(Treatment = factor(Treatment, levels = c(0, 1), 
+                            labels = c("Control", "Program")))
+
+# summary statistics
+summary_stats <- after_school |>
+  group_by(Treatment) |>
+  summarize(
+    mean_victim = mean(Victim, na.rm = TRUE),
+    sd_victim = sd(Victim, na.rm = TRUE),
+    median_victim = median(Victim, na.rm = TRUE),
+    count = n()
+  )
+
+print(summary_stats)
+
+# boxplot
+ggplot(after_school, aes(x = Treatment, y = Victim, fill = Treatment)) +
+  geom_boxplot() +
+  theme_bw() +
+  labs(title = "Victimization Scores by Treatment Group",
+       x = "Treatment Group", 
+       y = "Victimization Score (T-Scaled)")
+```
+
+### Randomization Test
+
+**Null Hypothesis ($H_0$):** $\mu_{program} - \mu_{control} = 0$. We would believe that the after-school program has no effect on average victimization scores, and that any observed difference is purely due to the random assignment of students.
+
+**Alternative Hypothesis ($H_A$):** $\mu_{program} - \mu_{control} \neq 0$. We would believe that the after-school program has an effect (positive or negative) on average victimization scores.
+
+```{r}
+# extract values into vectors for faster processing
+victim_scores <- after_school$Victim
+treat_labels <- after_school$Treatment
+
+# calculate the observed difference in means (Program - Control)
+obs_prog <- mean(victim_scores[treat_labels == "Program"], na.rm = TRUE)
+obs_ctrl <- mean(victim_scores[treat_labels == "Control"], na.rm = TRUE)
+obs_dif <- obs_prog - obs_ctrl
+
+cat("Observed Difference (Program - Control):", obs_dif, "\n")
+
+# set up the randomization test parameters
+k <- 10000
+n_prog <- sum(treat_labels == "Program", na.rm = TRUE)
+
+# pre-allocate a numeric vector of length k
+sim_diffs <- numeric(k) 
+
+set.seed(67)
+
+for (i in seq_len(k)) {
+  # shuffle the victimization scores
+  shuffled <- sample(victim_scores)
+  
+  # assign the shuffled scores back to the groups based on original sizes
+  sim_prog <- shuffled[1:n_prog]
+  sim_ctrl <- shuffled[(n_prog + 1):length(shuffled)]
+  
+  # calculate and store the simulated difference
+  sim_diffs[i] <- mean(sim_prog, na.rm = TRUE) - mean(sim_ctrl, na.rm = TRUE)
+}
+
+# calculate empirical p-value for a two-sided test
+p_value <- mean(abs(sim_diffs) >= abs(obs_dif))
+
+cat("Empirical p-value (Two-Sided):", p_value, "\n")
+```
+
+The empirical p-value is `r round(p_value, 4)`, which is greater than our 5% significance level. We fail to reject the null hypothesis. We do not believe there is evidence that the after-school program has an effect on victimization scores, and that an observed difference of `r round(obs_dif, 4)` could easily happen purely by random assignment. As such, the slight decrease seen in the victimization scores for students in the program group is not statistically significant and could be due to random chance.
+
+# Part 4
+
+### Randomization test
+
+Let $p_{ecmo}$ be the probability of a baby surviving with ECMO treatment, and $p_{cmt}$ be the probability of a baby surviving with CMT treatment.
+
+**Null Hypothesis ($H_0$):** $p_{ecmo} - p_{cmt} = 0$. We would believe that ECMO and CMT are equally effective, and that any observed difference in survival rates is purely due to the random assignment of patients.
+**Alternative Hypothesis ($H_A$):** $p_{ecmo} - p_{cmt} > 0$. We would believe that ECMO is more effective at saving lives than CMT (the proportion of living babies is higher for ECMO).
+
+```{r}
+# TRUE/FALSE vector
+# TRUE = Live, FALSE = Die
+outcomes <- c(rep(TRUE, 28), rep(FALSE, 1),  # ECMO: 28 Live, 1 Die
+              rep(TRUE, 6), rep(FALSE, 4))   # CMT: 6 Live, 4 Die
+
+# calculate the observed difference (ECMO survival prop - CMT survival prop)
+obs_ecmo <- mean(outcomes[1:29])
+obs_cmt <- mean(outcomes[30:39])
+obs_dif <- obs_ecmo - obs_cmt
+
+cat("Observed Difference (ECMO - CMT):", obs_dif, "\n")
+
+# randomization Test Setup
+k <- 10000
+# pre-allocate vector for maximum efficiency
+sim_diffs <- numeric(k) 
+
+set.seed(67)
+
+for (i in seq_len(k)) {
+  # shuffle
+  shuffled <- sample(outcomes)
+  
+  # arbitrarily split back into groups of 29 and 10
+  sim_ecmo <- shuffled[1:29]
+  sim_cmt <- shuffled[30:39]
+  
+  # store the simulated difference
+  sim_diffs[i] <- mean(sim_ecmo) - mean(sim_cmt)
+}
+
+# calculate the one-sided p-value
+p_value_rand <- mean(sim_diffs >= obs_dif)
+
+cat("Empirical p-value (Randomization Test):", p_value_rand, "\n")
+```
+
+**Randomization Test Conclusion:** 
+
+The empirical p-value is extremely small (`r round(p_value_rand, 4)`). Because the p-value is less than the any reasonable significance level (e.g. 0.05), we reject the null hypothesis. We believe there is evidence that ECMO is more effective at saving the lives of newborn babies with respiratory failure than CMT and that a survival rate difference of this magnitude is highly unlikely to occur purely by chance.
+
+
+### Comparison to Fisher's Exact Test
+
+```{r}
+# 2x2 contingency table
+ecmo_matrix <- matrix(c(28, 1, 6, 4), nrow = 2,
+                      dimnames = list(Outcome = c("Live", "Die"),
+                                      Treatment = c("ECMO", "CMT")))
+
+print(ecmo_matrix)
+
+# Fisher's exact test
+fisher_results <- fisher.test(ecmo_matrix, alternative = "greater")
+print(fisher_results)
+```
+
+Running both tests shows that the p-value from Fisher's Exact Test (`r signif(fisher_results$p.value, 4)`) and the empirical p-value from the Randomization Test (`r round(p_value_rand, 4)` are basically nearly identical! 
+
+This makes sense because Fisher's Exact test uses combinatorics to calculate the exact permutation distribution as it determines all possible ways to place the 34 "Live" babies across the two treatment groups. The randomization test we wrote achieves the exact same goal, but it relies on an approximate permutation distribution by simulating the shuffling process 10,000 times. 10,000 is a very large number of iterations, which would allow the randomized approximation to converge to Fisher's exact mathematical probability!
+
+
+# Part 5
+
+## _Comparing Groups, Chapter 7, Exercise 7.1_
+
+### Non-parametric bootstrap test
+
+```{r, message = FALSE}
+library(tidyverse)
+
+url <- "https://raw.githubusercontent.com/zief0002/comparing-groups/master/data/HSB.csv"
+hsb <- read_csv(url)
+
+# extract the science scores into vectors using dplyr and pull()
+# schtyp is coded as 1 = public, 0 = private
+pub_sci <- hsb |> filter(Schtyp == 1) |> pull(Sci)
+priv_sci <- hsb |> filter(Schtyp == 0) |> pull(Sci)
+
+n_pub <- length(pub_sci)
+n_priv <- length(priv_sci)
+
+# calculate the observed difference in variances
+obs_var_diff <- var(pub_sci, na.rm = TRUE) - var(priv_sci, na.rm = TRUE)
+
+cat("Observed Difference in Variances (Public - Private):", obs_var_diff, "\n")
+```
+
+To conduct a non-parametric bootstrap test for the null hypothesis ($H_0: \sigma^2_{Public} = \sigma^2_{Private}$), transformation on the data must be applied to make the null hypothesis true before we resample. We need to mean-center the data (which preserves the variance but removes mean differences) and pool it together to create a shared distribution of residuals to sample from.
+
+```{r}
+# mean-center the data to isolate the variances
+centered_pub <- pub_sci - mean(pub_sci, na.rm = TRUE)
+centered_priv <- priv_sci - mean(priv_sci, na.rm = TRUE)
+
+# pool the centered data to represent the null hypothesis of equal variances
+pooled_centered <- c(centered_pub, centered_priv)
+
+k <- 10000
+
+# pre-allocate a numeric vector of length k
+sim_var_diffs_np <- numeric(k) 
+
+set.seed(67)
+
+for (i in seq_len(k)) {
+  # sample WITH REPLACEMENT from the pooled centered data
+  sim_pub <- sample(pooled_centered, size = n_pub, replace = TRUE)
+  sim_priv <- sample(pooled_centered, size = n_priv, replace = TRUE)
+  
+  # calculate and store the simulated difference in variances
+  sim_var_diffs_np[i] <- var(sim_pub) - var(sim_priv)
+}
+
+# calculate the two-sided empirical p-value
+p_val_np <- mean(abs(sim_var_diffs_np) >= abs(obs_var_diff))
+
+cat("Empirical p-value (Non-Parametric Bootstrap):", p_val_np, "\n")
+```
+
+**Comment on Outcome:**
+
+The empirical p-value is `r round(p_val_np, 4)`, which is greater than 0.05. We fail to reject the null hypothesis and believe that there is no covnincing evidence that the variances of science scores between public and private school students, and that though public school students show a higher observed variance (approximately `r round(obs_var_diff, 2)` points higher), this difference could reasonably occur by chance under the null hypothesis of equal variances.
+
+### Parametric bootstrap test
+
+We assume that the population of Science Scores for both public and private school students follow a **Normal Distribution**. 
+
+As such, in order to conduct a parametric bootstrap test for $H_0: \sigma^2_{Public} = \sigma^2_{Private}$, we simulate data from two normal distributions. Under the null hypothesis, both distributions have the exact same variance (which we estimate using the pooled sample variance), but they maintain their own distinct sample means.
+
+```{r}
+# calculate the pooled variance (our estimate of the shared variance under H0)
+var_pool <- ((n_pub - 1) * var(pub_sci, na.rm = TRUE) + 
+             (n_priv - 1) * var(priv_sci, na.rm = TRUE)) / 
+            (n_pub + n_priv - 2)
+
+sd_pool <- sqrt(var_pool)
+
+# capture the original group means
+mean_pub <- mean(pub_sci, na.rm = TRUE)
+mean_priv <- mean(priv_sci, na.rm = TRUE)
+
+# pre-allocate vector
+sim_var_diffs_p <- numeric(k)
+
+set.seed(67)
+
+for (i in seq_len(k)) {
+  # simulate from Normal distributions using the shared sd_pool
+  sim_pub <- rnorm(n_pub, mean = mean_pub, sd = sd_pool)
+  sim_priv <- rnorm(n_priv, mean = mean_priv, sd = sd_pool)
+  
+  # calculate and store the simulated difference in variances
+  sim_var_diffs_p[i] <- var(sim_pub) - var(sim_priv)
+}
+
+# calculate the two-sided empirical p-value
+p_val_p <- mean(abs(sim_var_diffs_p) >= abs(obs_var_diff))
+
+cat("Empirical p-value (Parametric Bootstrap):", p_val_p, "\n")
+```
+
+**Comment on Outcome:**
+
+The empirical p-value is `r round(p_val_p, 4)`, which is greater than 0.05. We fail to reject the null hypothesis. We do not believe there is convincing evidence of a difference in the variances of science scores between public and private school students. 
+
+Because the parametric bootstrap test yielded a larger p-value (`r round(p_val_p, 4)`) compared to the non-parametric test (`r round(p_val_np, 4)`), we could say that if the normality assumption holds, the parametric test is actually less sensitive to detecting differences in this case. However, if the underlying science scores are heavily skewed or non-normal, the non-parametric bootstrap is the safer, more trustworthy result because it does not force an artificial shape onto the data.
+
+# Part 6
+
+```{r}
+light <- c(28, 26, 33, 24, 34,-44, 27, 16, 40, -2, 29, 22, 24, 21, 25, 30, 23, 29, 31, 19,
+           24, 20, 36, 32, 36, 28, 25, 21, 28, 29, 37, 25, 28, 26, 30, 32, 36, 26, 30, 22, 
+           36, 23, 27, 27, 28, 27, 31, 27, 26, 33, 26, 32, 32, 24, 39, 28, 24, 25, 32, 25, 
+           29, 27, 28, 29, 16, 23)
+```
+
+### Non-parametric bootstrap test
+
+Perform a bootstrap test
+
+```{r}
+# calculate observed mean
+obs_mean <- mean(light)
+cat("Original sample mean:", obs_mean, "\n")
+
+# shift the data to be centered at 33 (the Null Hypothesis)
+shifted_light <- light - obs_mean + 33
+
+# setup the Bootstrap
+k <- 10^5
+n <- length(light)
+
+# pre-allocate vector for maximum efficiency
+sim_means <- numeric(k)
+
+set.seed(67)
+
+for (i in seq_len(k)) {
+  # sample WITH replacement from the shifted data
+  samp <- sample(shifted_light, size = n, replace = TRUE)
+  sim_means[i] <- mean(samp)
+}
+
+# calculate empirical p-value for a TWO-SIDED test
+diff_obs <- abs(obs_mean - 33)
+p_val <- mean(abs(sim_means - 33) >= diff_obs)
+
+cat("Empirical p-value (All Data):", p_val, "\n")
+```
+
+
+### Non-parametric bootstrap test with outliers removed
+
+Perform the bootstrap test again after removing the two negative outliers (-2, and -44) 
+
+```{r}
+# remove the outliers and calculate the new mean
+light_clean <- light[light != -44 & light != -2]
+obs_mean_clean <- mean(light_clean)
+cat("Cleaned sample mean:", obs_mean_clean, "\n")
+
+# shift the cleaned data to be centered at 33
+shifted_clean <- light_clean - obs_mean_clean + 33
+
+# setup the Bootstrap
+sim_means_clean <- numeric(k)
+n_clean <- length(light_clean)
+
+set.seed(67)
+
+for (i in seq_len(k)) {
+  # sample WITH replacement from the newly shifted data
+  samp_clean <- sample(shifted_clean, size = n_clean, replace = TRUE)
+  sim_means_clean[i] <- mean(samp_clean)
+}
+
+# calculate empirical p-value for the TWO-SIDED test
+diff_obs_clean <- abs(obs_mean_clean - 33)
+p_val_clean <- mean(abs(sim_means_clean - 33) >= diff_obs_clean)
+
+cat("Empirical p-value (Outliers Removed):", p_val_clean, "\n")
+```
+
+Explain why the p-value is even smaller.
+
+When the two extreme negative outliers (`-44` and `-2`) are removed, the observed mean jumps from `r round(obs_mean, 2)` to `r round(obs_mean_clean, 2)`. Even though `r round(obs_mean_clean, 2)` is closer to the null hypothesis value of `33`, the resulting p-value is even smaller. 
+
+This happens because of how the outliers affect the spread of the data and the resulting sampling distribution. Variance and standard deviation measure how far values spread out around the mean. If we have the massive `-44` outlier, this would inflate the variance of the original sample. 
+
+When we remove the outliers, the variance of the sample shrinks significantly. Central Limit Theorem states that the standard error of a sampling distribution is directly proportional to the standard deviation of the population ($\sigma / \sqrt{n}$), ergo, dropping the outliers causes our bootstrapped sampling distribution to become incredibly narrow and tightly clustered around `33`.
+
+Even though the distance between the observed mean and the null hypothesis decreased slightly, the standard error of the distribution shrinks. In the new, tightly clustered sampling distribution, a mean of `r round(obs_mean_clean, 2)` represents a massive, highly improbable deviation from `33`, resulting in an even smaller p-value.
+
+
+
+
+
+
+

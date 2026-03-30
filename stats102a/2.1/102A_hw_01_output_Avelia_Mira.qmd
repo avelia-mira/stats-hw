@@ -1,0 +1,307 @@
+---
+title: "Stats 102A - Homework 1 - Output File"
+author: "Avelia Mira"
+format: pdf
+---
+
+Copyright Miles Chen, Do not post, share, or distribute without permission.
+
+To receive full credit the functions you write must pass all tests. We may conduct further tests that are not included on this page as well.
+
+# Academic Integrity Statement
+
+By including this statement, I, **Avelia Mira**, declare that all of the work in this assignment is my own original work.
+
+At no time did I use an AI tool to generate or debug my solutions.
+
+At no time did I look at the code of other students nor did I search for code solutions.
+
+I understand that forbidden AI usage or plagiarism on any single part of this assignment will result in a 0 for the entire assignment.
+
+\% Setting directory so that my code runs properly!
+
+```{r}
+setwd("~/Downloads/stats/stats102a/2.1")
+```
+
+```{r, error = TRUE}
+source("102a_hw_01_script_Avelia_Mira.R")  # edit with your file name
+```
+
+# Part 1: Tests for `by_type()`
+
+Do not edit any of the code in this section. The code here will run test cases to test if your function is working properly.
+
+```{r, error = TRUE}
+# Test Case 1: Standard mixed input with sorting OFF
+x1 <- c("house", "6", "2.2", "a", "3.4", "1")
+result1 <- by_type(x1)
+print(result1)
+```
+
+```{r, error = TRUE}
+# Test Case 2: Standard mixed input with sorting ON
+result2 <- by_type(x1, sort = TRUE)
+print(result2)
+```
+
+```{r, error = TRUE}
+# Test Case 3: Input with only integers
+x3 <- c("10", "5", "3", "1")
+result3 <- by_type(x3)
+print(result3)
+
+# Test Case 4: Input with only doubles
+x4 <- c("3.14", "2.71", "0.99")
+result4 <- by_type(x4)
+print(result4)
+
+# Test Case 5: Input with only characters
+x5 <- c("cat", "dog", "elephant")
+result5 <- by_type(x5)
+print(result5)
+
+# Test Case 6: Mixed input with NA values
+x6 <- c("10", "house", NA, "3.2", "2")
+result6 <- by_type(x6, sort = TRUE)
+print(result6)
+
+# Test Case 7: Input with logical values (should be treated as character)
+x7 <- c(TRUE, FALSE, "7", "apple", "4.5")
+result7 <- by_type(x7)
+print(result7)
+
+# Test Case 8: Input with floating-point numbers that can be integers
+x8 <- c("3.0", "5.0", "7.5", "4")
+result8 <- by_type(x8)
+print(result8)
+
+# Test Case 9: Empty vector input
+x9 <- c()
+result9 <- by_type(x9)
+print(result9)
+
+# Test Case 10: Input with non-numeric special characters
+x10 <- c("!", "@", "#", "5", "2.3")
+result10 <- by_type(x10)
+print(result10)
+```
+
+# Part 2: Tests for `prime_factor()`
+
+This section will print out a bunch of test cases to see if your `prime_factor()` function is working properly. Do not edit the following code which runs tests.
+
+```{r, error = TRUE}
+# a helper function for testing if a value x is prime.
+is_prime <- function(x){
+  if(!is.numeric(x)){ 
+    stop("Input must be numeric") 
+  }
+  if(length(x) != 1){
+    stop("Input must have length of 1")
+  }
+  if(as.integer(x) != x){ # non-integer values are not prime
+    return(FALSE)
+  }
+  if(x <= 1){ # negative numbers, 0, and 1 are all non-prime
+    return(FALSE)
+  }
+  if(x == 2){ # special case for 2
+    return(TRUE)
+  }
+  # we only need to check for prime factors less than sqrt(x)
+  max <- ceiling(sqrt(x))
+  for(i in 2:max){
+    if(x %% i == 0){ # if the values divides evenly, it is not prime
+      return(FALSE)
+    }
+  }
+  TRUE
+}
+```
+
+```{r, error = TRUE}
+prime_factor(0)
+prime_factor(1)
+prime_factor(2.2)
+
+for(x in c(2:50, 2001:2050)){
+  factors <- prime_factor(x)
+  cat(x, "has prime factors:", factors, "\n")
+  if(!all(sapply(factors, is_prime))){
+    cat("Problem: not all factors found are prime.\n")
+  }
+  if(prod(factors) != x){
+    cat("Problem: the product of factors does not equal x.\n")
+  }
+}
+
+```
+
+# Part 3: Tests for `month_convert()`
+
+Do not edit the following code which runs tests.
+
+```{r, error = TRUE}
+month_names <- read.delim("month_names.txt", encoding="UTF-8", row.names=1)
+
+x <- factor(c("March", "March", "February", "June"))
+month_convert(x, "English", "Spanish")
+
+x <- factor(c("March", "March", "February", "June", "Jaly", "Hamburger", "December"))
+month_convert(x, "English", "German")
+
+x <- factor(c("gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio",
+              "agosto", "settembre", "ottobre", "novembre", "dicembre"))
+month_convert(x, "Italian", "English")
+
+x <- factor(c("janeiro", "março", "abril", "maio", "junho", "julho", "maio", "setembro", 
+              "outubro", "novembro", "dezembro", "setembro", "setembro", "março"))
+y <- month_convert(x, "Portuguese", "French")
+print(y)
+y <- month_convert(y, "French", "Danish")
+print(y)
+y <- month_convert(y, "Danish", "Dutch")
+print(y)
+y <- month_convert(y, "Dutch", "Icelandic")
+print(y)
+```
+
+# Part 4: Questions to Answer
+
+Replace 'write your answer here' with your responses. Be sure your answers have been 'highlighted' using the triple hash `###` which makes the text large and bold.
+
+1.  Coercion: For each of the following, explain what type of output you will receive and why R is producing that output.
+    a.  `c(0, TRUE)`
+    b.  `c("F", F)`
+    c.  `c(list(1), "b")`
+    d.  `c(FALSE, 1L)`
+
+### Before I start the problem, we need to understand the order of coercion. This is logical \< integer \< double \< character \< list. When we put two types together, everything is coerced to the right side. That being said,
+
+### a. will be of type double because 0 is type double and it will coerce the TRUE to type double.
+
+### b. will be character because "F" is type character and it will coerce F to type character.
+
+### c. will be list because list(1) is type list and it will coerce "b" to type list.
+
+### d. will be integer because 1L is an integer and it will coerce FALSE to type integer.
+
+2.  What is the difference between NULL, NA, and NaN?
+
+### NULL is used to represent a nonexistent value and NULL is its own type. NA is used to represent missing and unknown values and there are NAs for each type. NaN is type double and is used to represent indeterminate forms in mathematics such as -inf and +inf.
+
+3.  What is the difference between logical(0) and NULL? Write a command (other than `logical(0)`) that will produce logical(0) as the output. Write a command (other than `NULL`) that will produce NULL as the output.
+
+### logical(0) is an empty logical vector while NULL is a nonexistent value.
+
+```{r}
+
+# this results in logical(0) because indices start by 1 and you can't access that in a vector. also i filled it all with logicals so it couldn't coerce into anything else
+vector_a = c(TRUE, FALSE, TRUE)
+vector_a[0]
+
+
+list_a = list(abc = 123)
+
+# this results in null because there is no def list item in list_a
+list_a$def
+
+```
+
+4.  A vector `c(TRUE, FALSE)` is a logical vector. Other than `TRUE` or `FALSE`, what can you insert into the vector so that it increases to a length of 3 and remains a logical vector and does not get coerced into another class?
+
+### You can write NA. This is because there are NAs of any type (and are also not a kind of type, unlike NULL).
+
+5.  What are the lengths of the following lists? Use bracket notation to subset them to the equivalent of `c("h","i")`. Be sure to print the result so it shows the subset.
+
+```{r}
+l1 <- list(letters[1:5], letters[3:9] , letters[4:7])
+l1
+length(l1) # the length is 3
+l1[[2]][6:7]
+
+l2 <- list( c(letters[1:5], letters[3:9]), letters[4:7] )
+l2
+length(l2) # the length is 2
+l2[[1]][11:12]
+```
+
+6.  What will `c(4:7) * c(2:4)` produce? Briefly, why?
+
+### The result will be c(4\*2, 5\*3, 6\*4, 7\*2) because even though c(2:4) is smaller than c(4:7) in terms of length, R tries to multiply the vectors together, but since the length is different, it appends a 2 to the vector (so it would be more like c(4:7) multiplied with the c(2:4) with the extra 2 appended onto it).
+
+7.  Take a look at the following code chunks. What are some of the differences between `cat()` and `print()`?
+
+```{r}
+cat(5 + 6)
+print(5 + 6)
+```
+
+```{r}
+x8 <- cat(5 + 6)
+y8 <- print(5 + 6)
+x8
+y8
+```
+
+```{r, error = TRUE}
+cat(letters[1:3], letters[24:26])
+print(letters[1:3], letters[24:26]) # Why are we getting the following error?
+# Error in print.default(letters[1:3], letters[24:26]) : invalid 'digits' argument
+cat(l1)
+print(l1)
+```
+
+### Concatenate just puts the content into the console while print formalises an index for the value. However, print appears to return the object that it prints while concatenate only shows the output on the console without doing anything else with it. As such, print crashed because it's actually only intended to take one object while the other two arguments are settings for the prinf function while concatenate can take multiple objects (hence, concatenate). When I took STATS 20 equivalent in SBCC and another R class, I ended up using sprintf to put objects together.
+
+8.  What happens to a factor when you reverse its levels?
+
+```{r}
+f1 <- factor(c("A","A","B","C","D","A","C"))
+f1
+levels(f1) <- rev(levels(f1))
+f1
+```
+
+### When you reverse the levels of a factor, it translates the values accordingly. All values with the first label become the last, and the values with the last label become the first. The order of the values is still kept the same, just that they've become mapped differently with the new reversal of levels.
+
+9.  How do f2 and f3 differ from the unmodified f1?
+
+```{r}
+f1 <- factor(c("A","A","B","C","D","A","C"))
+f1
+f2 <- factor(rev(c("A","A","B","C","D","A","C")))
+f2
+f3 <- factor(c("A","A","B","C","D","A","C"), levels = rev(c("A","B","C","D")))
+f3
+```
+
+### f2 reversed the order of the values while f3 reversed the order of the levels.
+
+10. What attributes does a data frame possess?
+
+### Data frames possess the attributes of both lists and matrices. If subsetted with a single vector, they act like lists. If subsetted with two vectors, they act like matrices. Additionally, because they possess the attributes of lists, they can hold different types of data (such as numeric, character, etc.) and because they possess the attributes of matrices, they inherit the 2D structure which means that all columns must be the same length.
+
+11. What does `as.matrix()` do when applied to a data frame with columns of different types? Create a simple `data.frame` with two columns: one numeric and one string. Use `as.matrix` and show the results.
+
+### When we do as.matrix() on a dataframe with columns of different types, it coerces everything into the least restrictive type. Recall the order of coercion to be logical \< integer \< double \< character \< list. When we put multiple types together, everything is coerced to the right side.
+
+```{r}
+# 1. create the mixed data frame
+student_values <- data.frame(
+  age = c(18, 19, 30),
+  name = c("person 1", "person 2", "person 3"),
+  major = c("pre-stds", "history", "gender studies"),
+  undergraduate = c(FALSE, FALSE, TRUE)
+)
+print(student_values)
+
+# 2. turn it into a matrix
+student_matrix <- as.matrix(student_values)
+
+# 3. show the results
+print(student_matrix)
+print(class(student_matrix))
+print(class(student_matrix[1][1])) # age, which was an integer, got turned into a character because name and major forced coercion
+```

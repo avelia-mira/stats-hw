@@ -1,0 +1,372 @@
+---
+title: "Stats 101A - Homework 8"
+author: "Avelia Mira"
+format: 
+  pdf:
+    include-in-header:
+      - text: |
+          \usepackage{fvextra}
+          \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+editor: visual
+---
+
+## Load libraries & setup
+
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+library(car)
+
+waistweightheight <- read.table("waistweightheight.txt", header = TRUE)
+cars04 <- read_csv("cars04.csv")
+pgatour2006 <- read_csv("pgatour2006.csv")
+```
+
+------------------------------------------------------------------------
+
+## Question 1: Understanding R², Adjusted R², and Hypothesis Tests
+
+In this problem, we explore why adjusted R-squared is more reliable than standard R-squared when deciding whether to add new variables to a regression model, and why hypothesis tests matter.
+
+### Part A: Starting model with Waist and Height
+
+Let's fit a model predicting Weight from Waist and Height to establish our baseline.
+
+```{r}
+model_a <- lm(Weight ~ Waist + Height, data = waistweightheight)
+summary(model_a)
+```
+
+#### a) Calculate SYY, SSReg, and RSS
+
+```{r}
+anova_a <- anova(model_a)
+print(anova_a)
+
+SSReg_a <- anova_a$`Sum Sq`[1] + anova_a$`Sum Sq`[2]
+RSS_a <- anova_a$`Sum Sq`[3]
+SYY_a <- SSReg_a + RSS_a
+
+cat("SSReg:", round(SSReg_a, 2), "RSS:", round(RSS_a, 2), "SYY:", round(SYY_a, 2))
+```
+
+From the ANOVA breakdown, I can see that our initial model explains an impressive amount of variation: - **SYY = 438,175.83** (total variation in Weight) - **SSReg = 387,916.60** (variation explained by Waist and Height) - **RSS = 50,259.23** (unexplained variation)
+
+#### b) Report R² and adjusted R²
+
+```{r}
+summary(model_a)$r.squared
+summary(model_a)$adj.r.squared
+```
+
+Our model fits the data quite well: - **R² = 0.8853** (explains 88.53% of variation) - **Adjusted R² = 0.8848**
+
+These values are very similar here because we only have 2 predictors.
+
+#### c) Interpret the slope for Height
+
+```{r}
+coef(model_a)["Height"]
+```
+
+For every additional inch of Height (holding Waist constant), Weight increases by approximately **2.49 pounds** on average. This makes intuitive sense—taller individuals tend to weigh more.
+
+------------------------------------------------------------------------
+
+### Part B: What happens when we add a useless variable?
+
+Now let's create a completely random variable and add it to the model. This will demonstrate why R² isn't reliable for model selection.
+
+```{r}
+set.seed(23)
+new.df <- transform(waistweightheight, worthless = rnorm(nrow(waistweightheight), 0, 5))
+```
+
+First, let's verify the variable is indeed useless by checking its relationship with Weight:
+
+```{r}
+model_worthless <- lm(Weight ~ worthless, data = new.df)
+summary(model_worthless)
+```
+
+The p-value of **0.796** confirms there's no relationship.
+
+```{r}
+plot(Weight ~ worthless, data = new.df,
+     main = "Weight vs. Worthless Variable",
+     xlab = "Worthless", ylab = "Weight")
+abline(model_worthless, lwd = 2)
+```
+
+Looking at the Weight vs. Worthless plot, it perfectly demonstrates what a useless variable looks like: - Points are randomly scattered with no discernible trend or pattern - The regression line is nearly flat (almost horizontal), indicating virtually no slope - Points are distributed equally above and below the line with no systematic relationship - This visual confirms the p-value of 0.796 — there's no statistically significant relationship - Even though we fit a regression line, the worthless variable explains essentially zero additional variation in Weight
+
+#### Now add worthless to the full model
+
+```{r}
+model_b <- lm(Weight ~ Waist + Height + worthless, data = new.df)
+summary(model_b)
+```
+
+#### b) What are SYY, SSReg, RSS, and SSreg due to worthless?
+
+```{r}
+anova_b <- anova(model_b)
+print(anova_b)
+
+SSReg_worthless <- anova_b$`Sum Sq`[3]
+RSS_b <- anova_b$`Sum Sq`[4]
+SSReg_b <- anova_b$`Sum Sq`[1] + anova_b$`Sum Sq`[2] + SSReg_worthless
+SYY_b <- SSReg_b + RSS_b
+
+cat("SSReg:", round(SSReg_b, 2), "RSS:", round(RSS_b, 2), "SYY:", round(SYY_b, 2),
+    "SSReg due to worthless:", round(SSReg_worthless, 2))
+```
+
+Even though worthless is a random variable with no real relationship to Weight, it still "explains" a tiny bit of variation: - **SYY = 438,175.83** (same as before) - **SSReg = 387,928.35** (increased by 11.75) - **RSS = 50,247.49** (decreased by 11.75) - **SSreg due to worthless = 11.75** (the amount explained by the useless variable)
+
+This is the key insight—even useless variables explain some variation just by random chance.
+
+#### c) How have R² and adjusted R² changed?
+
+```{r}
+summary(model_b)$r.squared
+summary(model_b)$adj.r.squared
+```
+
+Here's the critical lesson about why we need adjusted R-squared: - **R² = 0.8853** (increased from 0.8853 to 0.8853 — actually slightly higher!) - **Adjusted R² = 0.8846** (decreased from 0.8848 to 0.8846)
+
+Standard R² increases every time I add any variable to the model, even a useless one. But adjusted R² penalizes adding variables that don't truly help. Since worthless adds nothing meaningful, the adjusted R² correctly decreases.
+
+------------------------------------------------------------------------
+
+### Part C: Order matters in sequential ANOVA
+
+Let's flip the order and put worthless first instead of last:
+
+```{r}
+model_c <- lm(Weight ~ worthless + Waist + Height, data = new.df)
+summary(model_c)
+```
+
+```{r}
+anova_c <- anova(model_c)
+print(anova_c)
+
+SSReg_c <- anova_c$`Sum Sq`[1] + anova_c$`Sum Sq`[2] + anova_c$`Sum Sq`[3]
+RSS_c <- anova_c$`Sum Sq`[4]
+SYY_c <- SSReg_c + RSS_c
+
+cat("SSReg:", round(SSReg_c, 2), "RSS:", round(RSS_c, 2), "SYY:", round(SYY_c, 2))
+```
+
+The overall sums of squares stay the same: - **SYY = 438,175.83** - **SSReg = 387,928.35** - **RSS = 50,247.49**
+
+R's `anova()` function uses sequential ANOVA. When worthless comes first, it gets credited with explaining \~58 units of variation (which is really just by chance). When it comes last, it only explains 11.75 units. The order changes how the SS gets divvied up, but the total remains constant.
+
+### Part D: R-squared vs. Adjusted R-squared
+
+Which do you think is a more reliable guide as to whether a new variable should be added, R-squared or adjusted R-squared? Why?
+
+I think adjusted R-squared is the more reliable guide.
+
+As demonstrated in Part (b), standard R-squared represents the "proportion of variation explained by regression" (SSReg/SYY), which means it will artificially increase anytime any variable is added to the model, even if that variable is generated by a random number generator and has no actual association with the response. Adjusted R-squared corrects for this by penalizing models that include unhelpful variables, making it a better indicator of whether a new variable truly improves the model.
+
+### Part E: Why Not Just Use SSreg?
+
+Why can't we just look at SSreg to decide whether to add a new variable (following the rule if SSreg gets bigger, add the new variable)? Why do you think partial tests are useful for telling us whether we should add a new variable?
+
+Why can't we just look at SSReg? Regression sums of squares can be broken down into sequential pieces where $SSReg_{total} = SSReg_{var1} + \Delta SSReg_{var2} + ...$. Because adding any variable will explain at least a tiny fraction of the remaining residual error by random chance, $\Delta SSReg$ will always be $\geq 0$. Therefore, looking only for an increase in SSReg would lead me to keep every useless variable I ever test.
+
+A partial F-test answers the specific question: "Given a model with p-1 parameters, does adding a new variable explain a significant amount of the total variation?". Instead of just checking if SSReg got bigger, the partial test formally evaluates if the additional variation explained is statistically significant (beyond what is expected by chance) given the variables that are already in the model.
+
+## Question 2: Multiple Regression with Cars04 Data
+
+Upload the data cars04. Fit a model to predict Suggested RetailPrice using all of the remaining numerical variables, but exclude Vehicle.Name and Hybrid. Do not use transformations.
+
+```{r}
+str(cars04)
+head(cars04)
+names(cars04)
+```
+
+```{r}
+cars04_clean <- cars04 %>% 
+  select(-`Vehicle Name`, -Hybrid)
+
+model_q2 <- lm(SuggestedRetailPrice ~ ., data = cars04_clean)
+summary(model_q2)
+```
+
+### Part A: Why Exclude Vehicle.Name?
+
+Why did we exclude Vehicle.Name? (Hint: you might want to try to fit a model with it and see what happens, and then explain why this happens.)
+
+```{r}
+model_with_name <- lm(SuggestedRetailPrice ~ ., data = cars04)
+summary(model_with_name)
+```
+
+Vehicle Name acts as a unique identifier for each car. The lecture notes explicitly warn to be on the lookout for ID variables like this. If I include a categorical variable with k unique categories (where almost every car has its own name), R will attempt to create k−1 "dummy" variables. Because there is practically a dummy variable for every single observation, the model would perfectly predict the data by assigning a specific coefficient to each specific car, leaving no degrees of freedom for the residuals. This completely breaks the model's ability to estimate standard errors or provide meaningful inference. In short, including Vehicle Name would result in overfitting and make the model useless for prediction.
+
+### Part B: Equation of the Fitted Model
+
+Write the equation of the fitted model.
+
+```{r}
+coef(model_q2)
+```
+
+Looking at the `Estimate` column in the `summary(model_q2)` output, my fitted equation is:
+
+$\widehat{SuggestedRetailPrice} = 349.98 + 1.05(DealerCost) - 32.25(EngineSize) + 228.33(Cylinders) + 2.36(Horsepower)$ $- 16.74(CityMPG) + 46.76(HighwayMPG) + 0.70(Weight) + 27.05(WheelBase) - 7.32(Length) - 84.71(Width)$
+
+### Part C: Cylinders Variable Analysis
+
+Using the summary command, report the estimated slope, the t-statistic and the p-value for the Cylinders variable. What can we conclude from this t-statistic and p-value? (Assume that all necessary model conditions are valid.)
+
+```{r}
+summary(model_q2)$coefficients["Cylinders", ]
+```
+
+-   Estimated slope for Cylinders = 228.33
+-   t-statistic = 3.171
+-   p-value = 0.00173
+
+This is a partial test. If the p-value is less than my significance level (e.g., \< 0.05), I can conclude that, given all other variables are already in the model, adding Cylinders explains a statistically significant amount of additional variation in the Suggested Retail Price.
+
+**Interpretation of the slope:** Holding all other variables constant, the estimated slope represents the mean change in Suggested Retail Price for a one-unit increase in Cylinders. Specifically, for each additional cylinder, the suggested retail price changes by $\hat{\beta}_{Cylinders}$ dollars on average, holding all other variables constant.
+
+### Part D: t-statistic Using anova() Command
+
+Show how to get the t-statistic value for Cylinders using the anova() command.
+
+The `anova()` command in R produces a Sequential ANOVA table, meaning the sums of squares (and resulting F-statistics) depend entirely on the order the variables are entered into the model. The lectures state the theorem that the square-root of an F-distribution with 1 degree of freedom in the numerator is equal to the t-distribution.
+
+To get the equivalent of the `summary()` t-statistic using `anova()`, I need to fit a new model where Cylinders is entered last.
+
+```{r}
+vars_in_model <- names(coef(model_q2))[-1]
+vars_except_cyl <- vars_in_model[vars_in_model != "Cylinders"]
+
+formula_cyl_last <- as.formula(paste("SuggestedRetailPrice ~", 
+                                      paste(vars_except_cyl, collapse = " + "), 
+                                      "+ Cylinders"))
+model_cyl_last <- lm(formula_cyl_last, data = cars04_clean)
+
+anova_output <- anova(model_cyl_last)
+print(anova_output)
+
+f_val_cylinders <- anova_output["Cylinders", "F value"]
+t_stat_calculated <- sqrt(f_val_cylinders)
+
+cylinders_coef <- coef(model_q2)["Cylinders"]
+if(cylinders_coef < 0) {
+  t_stat_calculated <- -t_stat_calculated
+}
+
+print(paste("t-statistic from anova():", t_stat_calculated))
+print(paste("t-statistic from summary():", summary(model_q2)$coefficients["Cylinders", "t value"]))
+```
+
+The partial F-test from `anova()` when Cylinders is entered last tests whether adding Cylinders to a model with all other variables significantly improves the fit. For a single parameter, the relationship is: $t = \pm\sqrt{F}$, where the sign matches the sign of the coefficient estimate.
+
+If the slope estimate in `summary()` is negative, I need to add a negative sign to the square root to perfectly match the `summary()` t-statistic.
+
+### Part E: F-statistic Interpretation
+
+Report and interpret the F-statistic from the summary() command.
+
+```{r}
+model_summary <- summary(model_q2)
+model_summary$fstatistic
+```
+
+Looking at the very bottom line of the `summary(model_q2)` output:
+
+-   F-statistic = 20,730.21
+-   Degrees of freedom = 10 and 223
+-   p-value = \< 2.2e-16
+
+This is the "F-test to fit" (also called the overall F-test). It tests the null hypothesis that all of the slopes are equal to 0:
+
+$H_0: \beta_1 = \beta_2 = ... = \beta_p = 0$
+
+versus the alternative that at least one slope is non-zero.
+
+If the p-value is very small (typically \< 0.05), I reject the null hypothesis and conclude that at least one of the predictor variables is significantly associated with the Suggested Retail Price. This tells me that the model as a whole provides significantly better predictions than simply using the mean of the response variable.
+
+## Question 3: Collinearity in PGA Tour Data
+
+Using the pgatour2006 data, fit the "full" model (with Name and TigerWoods removed).
+
+Collinearity describes a condition in which two or more predictors are correlated with each other.
+
+```{r}
+pga_clean <- pgatour2006 %>% select(-Name, -TigerWoods)
+
+pga_model <- lm(PrizeMoney ~ ., data = pga_clean)
+summary(pga_model)
+```
+
+### Part A: Scatterplots for Collinearity Detection
+
+Using scatterplots, are there any predictors that you think might have collinearity issues? (Try the pairs or scatterplotmatrix functions). Explain.
+
+```{r}
+pairs(pga_clean)
+
+scatterplotMatrix(pga_clean)
+```
+
+To find collinearity issues, I look at the grid of scatterplots for strong linear associations between any two predictor (x) variables.
+
+Looking at the scatterplot matrix, I can see:
+
+-   Tight linear clustering is visible in several predictor relationships, particularly among putting-related variables (PuttingAverage, PuttsPerRound, GIR)
+-   PuttsPerRound and PuttingAverage show strong, diagonal linear patterns with minimal scatter — these variables are essentially measuring the same golfing dimension
+-   GIR (Greens in Regulation) displays predictable relationships with putting metrics, indicating they're not independent
+-   Variables tend to cluster in specific ranges rather than spreading randomly, showing systematic relationships
+-   These tight diagonal patterns are the visual signature of high multicollinearity
+
+These tight linear relationships are exactly why the VIF values for PuttingAverage (15.85) and PuttsPerRound (20.95) are so high — the variables are highly correlated, inflating standard errors. These relationships make intuitive sense: GIR and putting statistics are fundamentally related to scoring performance, and putting metrics naturally correlate with each other since they measure aspects of the same golfing skill.
+
+### Part B: Variance Inflation Factors (VIF)
+
+One result of collinearity is that it inflates the standard errors of the parameter estimates for the collinear variables. If, say, X2 and X3 are collinear, then SE($\hat{\beta}_2$) will be larger than it would be if X3 were NOT in the model, and vice-versa.
+
+You can calculate the "variance inflation factor" -- which measures, for a parameter, how many times greater the SE is due to collinearity -- using the vif() function within the car package. Generally, a VIF \> 5 is considered worth investigating.
+
+Which variables have VIFs \> 5? How does this relate to what you saw in (a)?
+
+```{r}
+vif(pga_model)
+```
+
+Based on the `vif()` output, the variables GIR, PuttingAverage, BirdieConversion, and PuttsPerRound have a VIF \> 5.
+
+Specific VIF values: - GIR: 8.09 - PuttingAverage: 15.85 - BirdieConversion: 5.43 - PuttsPerRound: 20.95
+
+These are the exact same variables that showed a strong linear relationship in the scatterplot matrix. The high correlation between these specific predictors is what is causing their standard errors to inflate. The VIF quantitatively confirms what I visually observed in the scatterplots—these variables are highly collinear and are measuring similar aspects of golf performance.
+
+### Part C: PuttsPerRound and Inflated Standard Errors
+
+The variable PuttsPerRound has a very high p-value. What effect does an inflated standard error have on the p-value? Explain why we should not simply drop this variable from the model.
+
+```{r}
+summary(pga_model)$coefficients["PuttsPerRound", ]
+```
+
+The t-statistic for testing a slope is calculated as:
+
+$$t = \frac{\hat{\beta}_i - 0}{SE(\hat{\beta}_i)}$$
+
+Because collinearity inflates the standard error (the denominator), it mathematically forces the t-statistic to become smaller (closer to zero). A smaller t-statistic directly results in a larger p-value. Therefore, an inflated standard error due to collinearity makes it harder to detect a statistically significant relationship, even if one truly exists.
+
+The p-value in a multiple regression `summary()` output comes from a partial test. A partial test only asks: "Given all the other variables already in the model, does adding PuttsPerRound explain a significant amount of additional variation?".
+
+Because PuttsPerRound is highly collinear with other variables in the model, the variation it explains is already being captured by those other variables. A high p-value doesn't mean PuttsPerRound has no relationship with the response variable—it just means it's redundant in this specific combination of variables.
+
+If I were to remove the collinear variables that are inflating its standard error, PuttsPerRound might become statistically significant. Simply dropping it based on the p-value could lead to omitted variable bias if putting performance is truly important for predicting prize money.
+
+Collinearity is difficult to "fix". If two variables are strongly collinear, one approach is to take the position that they must be measuring the same thing, so that one is redundant. In that case, I would keep the one with the highest R-squared. Another approach, which I might have seen in other classes, is to use something called "principal components analysis", which can merge collinear variables into a single variable if conditions are right. There are more modern approaches as well, including the LASSO, which I might study later.

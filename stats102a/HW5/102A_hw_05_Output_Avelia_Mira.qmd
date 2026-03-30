@@ -1,0 +1,626 @@
+---
+title: "Stats 102A - Homework 5 - Output File"
+author: "Avelia Mira"
+format: pdf
+---
+
+Homework questions and instructions copyright Miles Chen, Do not post, share, or distribute without permission.
+
+Modified certain template code to optimise based on the ideas in the lecture slides. 
+
+## 1. An IEEE 754 Mini-Floating Point number [22 points, 2pts each part]
+
+In class, I demonstrated the use of a mini-floating point number system using 8 bits. In my class demo, I used 1 bit for the sign, 3 bits for the exponent, and 4 bits for the mantissa. For this problem, imagine a different mini-floating point system with 10 bits - 1 bit for the sign, 4 bits for the exponent, and 5 bits for the mantissa.
+
+```c
+0 0000 00000 # would now represent the decimal value 0
+```
+
+Answer the following questions under this new system.
+
+a. What is the bias that would be used for the exponent? What is the largest positive exponent (that is not used to represent infinity)? What is the most negative exponent (that will not lead to a denormalized state)?
+
+Bias: 7
+Largest positive normalised exponent: 7
+Most negative normalised exponent: -6
+
+b. How would the value 5.5 be stored in this system?
+
+Bit Pattern: `0 1001 01100`
+
+c. What value would the following bit sequence represent `0 0111 00000`?
+
+1
+
+d. What value would the following bit sequence represent `0 0111 00001`? (Express as a fraction and also in decimal.)
+
+Fraction: 33/32
+Decimal: 1.03125
+
+e. What is the smallest positive normalized value that can be expressed? (Fill in the bits. Express as a fraction and also in decimal.)
+
+`0 0001 00000`
+Fraction: 1/64
+Decimal: 0.015625
+
+f. What is the smallest positive (denormalized) non-zero value that can be expressed? (Fill in the bits. Express as a fraction and also in decimal.)
+
+`0 0000 00001`
+Fraction: 1/2048
+Decimal: 0.00048828125
+
+g. What is the largest denormalized value that can be expressed? (Fill in the bits. Express as a fraction and also in decimal.)
+
+`0 0000 11111`
+Fraction: 31/2048
+Decimal: 0.01513671875
+
+h. What is the largest finite value that can be expressed with this sytem? (Fill in the bits. Express as a fraction and also in decimal.)
+
+`0 1110 11111`
+Fraction: 252
+Decimal: 252
+
+i. With our 10 bit floating-point system, what is the smallest value you can add to 1 so that the sum will be different from 1? In other words, what is the machine epsilon of this system?
+
+Machine Epsilon: 1/32
+
+j. What is the smallest value you can add to the number 2 so that the sum will be different from 2? (Express as a fraction)
+
+Fraction: 1/16
+
+wa
+Fraction: 1/8
+
+## 2. Root Finding with Fixed Point Iteration [12 points, 2 points each part]
+
+```{r, error = TRUE}
+library(ggplot2)
+fixedpoint_show <- function(ftn, x0, iter = 5){
+  # applies fixed-point method to find x such that ftn(x) = x
+  # ftn is a user-defined function
+
+  # df_points_1 and df_points_2 are used to track each update
+  # it will be used to plot the line segments showing each update
+  # each line segment connects the points (x1, y1) to (x2, y2)
+  df_points_1 <- data.frame(
+    x1 = rep(NA, iter),
+    y1 = rep(NA, iter),
+    x2 = rep(NA, iter),
+    y2 = rep(NA, iter))
+  df_points_2 <- df_points_1
+  
+  xnew <- x0
+  cat("Starting value is:", xnew, "\n")
+  
+  # iterate the fixed point algorithm
+  for (i in seq_len(iter)) {
+    xold <- xnew
+    xnew <- ftn(xold)
+    cat("Next value of x is:", xnew, "\n")
+    # vertical line segments, where x1 = x2
+    df_points_1[i, ] <- c(x1 = xold, y1 = xold, x2 = xold, y2 = xnew)
+    # horizontal line segments, where y1 = y2
+    df_points_2[i, ] <- c(x1 = xold, y1 = xnew, x2 = xnew, y2 = xnew)
+  }
+
+  # use ggplot to plot the function and the segments for each iteration
+  # determine the limits to use for the plot
+  # start is the min of these values. we subtract .1 to provide a small margin
+  plot_start <- min(df_points_1$x1, df_points_1$x2, x0) - 0.1  
+  # end is the max of these values
+  plot_end <- max(df_points_1$x1, df_points_1$x2, x0) + 0.1
+  
+  # calculate the value of the funtion fx for all x
+  x <- seq(plot_start, plot_end, length.out = 200)
+  fx <- rep(NA, length(x))
+  for (i in seq_along(x)) {
+    fx[i] <- ftn(x[i])
+  }
+  function_data <- data.frame(x, fx) # data frame containing the function values
+  
+  p <- ggplot(function_data, aes(x = x, y = fx)) + 
+    geom_line(color = "royalblue", size = 1) +  # plot the function
+    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2), 
+                 data = df_points_1, color = "black", lty = 1) +
+    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2), 
+                 data = df_points_2, color = "red", lty = 2) +
+    geom_abline(intercept = 0, slope = 1) + # plot the line y = x
+    coord_equal() + theme_bw()
+  
+  print(p) # produce the plot
+  xnew # value that gets returned
+}
+
+f <- function(x) cos(x)
+fixedpoint_show(f, 1, iter= 10)
+```
+
+### Do part (a) using x0 = 1
+
+```{r}
+fixedpoint_show(f, x0 = 1, iter = 10)
+```
+
+
+### Do part (a) using x0 = 3
+
+```{r}
+fixedpoint_show(f, x0 = 3, iter = 10)
+```
+
+### Do part (a) using x0 = 6
+
+```{r}
+fixedpoint_show(f, x0 = 6, iter = 10)
+```
+
+### Do part (b) using x0 = 2 
+
+```{r}
+f_b <- function(x) { exp(exp(-x)) }
+
+fixedpoint_show(f_b, x0 = 2, iter = 10)
+``` 
+
+### Do part (c) using x0 = 2 
+
+```{r, error = TRUE}
+f_c <- function(x) { -log(log(x)) }
+
+fixedpoint_show(f_c, x0 = 2, iter = 10)
+```
+
+### Do part (d) using x0 = 2, no more than 6 iterations
+
+```{r}
+f_d <- function(x) { x + log(x) - exp(-x) }
+
+fixedpoint_show(f_d, x0 = 2, iter = 6)
+```
+
+## 3. Root Finding with Newton Raphson [22 points, 10 points for completing the code. 1 pts each graph]
+
+```{r, error = TRUE}
+library(ggplot2)
+
+newtonraphson_show <- function(ftn, x0, iter = 5) {
+  # applies Newton-Raphson to find x such that ftn(x)[1] == 0
+  # ftn is a function of x. it returns two values, f(x) and f'(x)
+  # x0 is the starting point
+  
+  # df_points_1 and df_points_2 are used to track each update
+  df_points_1 <- data.frame(
+    x1 = rep(NA, iter), y1 = rep(NA, iter), x2 = rep(NA, iter), y2 = rep(NA, iter))
+  df_points_2 <- df_points_1
+  
+  xnew <- x0
+  cat("Starting value is:", xnew, "\n")
+  
+  # the algorithm
+  for(i in seq_len(iter)){
+    xold <- xnew
+    f_xold <- ftn(xold)
+    
+    # check if f(xold) produced NaN or NA before proceeding
+    if (any(is.na(f_xold) | is.nan(f_xold))) {
+      cat("Function evaluated to NaN/NA. Stopping iterations.\n")
+      break
+    }
+    
+    xnew <- xold - f_xold[1]/f_xold[2]
+    cat("Next x value:", xnew, "\n")
+    
+    # vertical segment from (xold, 0) up/down to (xold, f(xold))
+    df_points_1[i,] <- c(x1 = xold, y1 = 0, x2 = xold, y2 = f_xold[1]) 
+    
+    # tangent segment from (xold, f(xold)) to the new root guess (xnew, 0)
+    df_points_2[i,] <- c(x1 = xold, y1 = f_xold[1], x2 = xnew, y2 = 0) 
+  }
+  
+  # determine the limits to use for the plot
+  plot_start <- min(df_points_1$x1, df_points_2$x2, x0, na.rm = TRUE) - 0.1  
+  plot_end <- max(df_points_1$x1, df_points_2$x2, x0, na.rm = TRUE) + 0.1
+  
+  # calculate the value of the funtion fx for all x
+  x <- seq(plot_start, plot_end, length.out = 200)
+  fx <- rep(NA, length(x))
+  for (i in seq_along(x)) {
+    # ftn returns a vector of c(value, derivative); we just want the value
+    temp_result <- ftn(x[i])
+    fx[i] <- temp_result[1]
+  }
+  function_data <- data.frame(x, fx) 
+  
+  # build the plot
+  p <- ggplot(function_data, aes(x = x, y = fx)) + 
+    geom_hline(yintercept = 0, color = "darkgray", linewidth = 1) + # x-axis
+    geom_line(color = "royalblue", linewidth = 1) +  # plot the function
+    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2), 
+                 data = df_points_1, color = "black", lty = 1) +
+    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2), 
+                 data = df_points_2, color = "red", lty = 2) +
+    theme_bw() + 
+    labs(title = paste("Newton-Raphson starting at x0 =", x0))
+  
+  print(p)
+  xnew 
+}
+
+```
+
+Produce graphs for:
+
+### The function f(x) = x^2 - 4 using x0 = 10
+
+```{r}
+f_sq <- function(x) {
+  value <- x^2 - 4
+  derivative <- 2*x
+  c(value, derivative)
+}
+
+newtonraphson_show(f_sq, 10, iter = 5)
+```
+
+### part (a) using x0 = 1, 3, 6  Results should be similar to finding fixed point of cos(x)
+
+```{r}
+a <- function(x){
+  value <- cos(x) - x   
+  derivative <- -sin(x) - 1  
+  c(value, derivative) 
+} 
+
+newtonraphson_show(a, 1, iter = 8)
+newtonraphson_show(a, 3, iter = 8)
+newtonraphson_show(a, 6, iter = 8)
+```
+
+### part (b) using x0 = 2        Results should be similar to finding fixed point of exp(exp(-x))
+
+```{r}
+b <- function(x) {
+  value <- exp(exp(-x)) - x
+  derivative <- -exp(exp(-x) - x) - 1
+  c(value, derivative)
+}
+
+newtonraphson_show(b, 2, iter = 6)
+```
+
+### part (c) using x0 = 0
+
+```{r, error = TRUE}
+c_fun <- function(x) {
+  value <- -log(log(x)) - x
+  derivative <- -1/(x * log(x)) - 1
+  c(value, derivative)
+}
+
+newtonraphson_show(c_fun, 0, iter = 5) 
+```
+
+### Part (d) using x0 = 1.1, 1.3, 1.4, 1.5, 1.6, 1.7 (should be simple. just repeat the command several times )
+
+```{r}
+d <- function(x) {
+  value <- log(x) - exp(-x)
+  derivative <- 1/x + exp(-x)
+  c(value, derivative)
+}
+
+# iterate through the multiple starting values to generate the graphs
+start_values <- c(1.1, 1.3, 1.4, 1.5, 1.6, 1.7)
+
+for (start_val in start_values) {
+  newtonraphson_show(d, start_val, iter = 6)
+}
+```
+
+
+## 4. Root Finding with Secant Method [24 points- 20 points for completing the code. 1 pts each graph]
+
+
+```{r}
+secant_show <- function(ftn, x0, x1, iter = 5) {
+  
+  # dataframes to store our line coordinates
+  df_points_1 <- data.frame(x1 = rep(NA, iter), y1 = rep(NA, iter), x2 = rep(NA, iter), y2 = rep(NA, iter)) # vertical drops
+  df_points_2 <- df_points_1 # secant lines
+  
+  # for the loop, we will use variables that update
+  x_old <- x0
+  x_curr <- x1
+  
+  cat("Starting values: x0 =", x0, ", x1 =", x1, "\n")
+  
+  for(i in seq_len(iter)){
+    # evaluate the function
+    f_old <- ftn(x_old)
+    f_curr <- ftn(x_curr)
+    
+    # calculate the math
+    slope <- (f_curr - f_old) / (x_curr - x_old)
+    xnew <- x_curr - f_curr * (x_curr - x_old) / (f_curr - f_old)
+    
+    cat("Iteration", i, "- Next x value:", xnew, "\n")
+    
+    # calculate line segment endpoints
+    x_left <- min(x_old, x_curr, xnew)
+    x_right <- max(x_old, x_curr, xnew)
+    y_left <- slope * (x_left - xnew)
+    y_right <- slope * (x_right - xnew)
+    
+    # store the line segments for plotting
+    # vertical segment: from the current guess on x-axis up to the curve
+    df_points_1[i,] <- c(x1 = x_curr, y1 = 0, x2 = x_curr, y2 = f_curr) 
+    # secant line segment: from left-most to right-most
+    df_points_2[i,] <- c(x1 = x_left, y1 = y_left, x2 = x_right, y2 = y_right)
+    
+    # update values
+    x_old <- x_curr
+    x_curr <- xnew
+  }
+  
+  # dertermine plot limits based on all explored x values
+  plot_start <- min(df_points_2$x1, x0, x1, na.rm = TRUE) - 0.5  
+  plot_end <- max(df_points_2$x2, x0, x1, na.rm = TRUE) + 0.5
+  
+  x_vals <- seq(plot_start, plot_end, length.out = 200)
+  fx_vals <- rep(NA, length(x_vals))
+  for (i in seq_along(x_vals)) { fx_vals[i] <- ftn(x_vals[i]) }
+  function_data <- data.frame(x = x_vals, fx = fx_vals) 
+  
+  p <- ggplot(function_data, aes(x = x, y = fx)) + 
+    geom_hline(yintercept = 0, color = "darkgray", linewidth = 1) + 
+    geom_line(color = "royalblue", linewidth = 1) +  
+    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2), 
+                 data = df_points_1, color = "black", lty = 1) +
+    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2), 
+                 data = df_points_2, color = "red", lty = 2) +
+    theme_bw() +
+    labs(title = "Secant Method")
+  
+  print(p)
+  return(x_curr) 
+}
+```
+
+Produce graphs for: 
+
+### The function $f(x) = x^2 - 4$ using x0 = 10, and x1 = 8
+
+```{r}
+f_sec1 <- function(x) { x^2 - 4 }
+secant_show(f_sec1, x0 = 10, x1 = 8)
+```
+
+### $f(x) = cos(x) - x$ using $x_0 = 1$ and $x_1 = 2$.
+
+```{r}
+f_sec2 <- function(x) { cos(x) - x }
+secant_show(f_sec2, x0 = 1, x1 = 2)
+```
+
+### $f(x) = log(x) - exp(-x)$ using $x_0 = 1$ and $x_1 = 2$.
+
+```{r}
+f_sec3 <- function(x) { log(x) - exp(-x) }
+secant_show(f_sec3, x0 = 1, x1 = 2)
+```
+
+### Find the root of $x^2 - 0.5$ using $x_0 = 4$ and $x_1 = 3.5$.
+
+```{r}
+f_sec4 <- function(x) { x^2 - 0.5 }
+secant_show(f_sec4, x0 = 4, x1 = 3.5)
+```
+
+
+
+## 5. Coordinate Descent Algorithm for Optimization [20 points]
+
+
+```{r}
+##### A modifcation of code provided by Eric Cai
+golden = function(f, lower, upper, tolerance = 1e-5)
+{
+   golden.ratio = 2/(sqrt(5) + 1)
+
+   ## Use the golden ratio to find the initial test points
+   x1 <- lower + golden.ratio * (upper - lower)
+   x2 <- upper - golden.ratio * (upper - lower)
+   
+   ## the arrangement of points is:
+   ## lower ----- x2 --- x1 ----- upper
+
+   ### Evaluate the function at the test points
+   f1 <- f(x1)
+   f2 <- f(x2)
+
+   while (abs(upper - lower) > tolerance) {
+        if (f2 > f1) {
+        # the minimum is to the right of x2
+        lower <- x2  # x2 becomes the new lower bound
+        x2 <- x1     # x1 becomes the new x2
+        f2 <- f1     # f(x1) now becomes f(x2)
+        x1 <- lower + golden.ratio * (upper - lower)  
+        f1 <- f(x1)  # calculate new x1 and f(x1)
+        } else {
+        # then the minimum is to the left of x1
+        upper <- x1  # x1 becomes the new upper bound
+        x1 <- x2     # x2 becomes the new x1
+        f1 <- f2
+        x2 <- upper - golden.ratio * (upper - lower)
+        f2 <- f(x2)  # calculate new x2 and f(x2)
+        }
+    }
+    (lower + upper)/2 # the returned value is the midpoint of the bounds
+}
+```
+
+```{r}
+g <- function(x,y) { 
+    5 * x ^ 2 - 6 * x * y + 5 * y ^ 2
+}
+x <- seq(-1.5, 1, len = 100)
+y <- seq(-1.5, 1, len = 100)
+```
+
+```{r}
+contour_df <- data.frame(
+  x = rep(x, each = 100),
+  y = rep(y, 100),
+  z = outer(x, y, g)[1:100^2]
+  )
+ggplot(contour_df, aes(x = x, y = y, z = z)) + 
+  geom_contour(binwidth = 0.9) + 
+  theme_bw()
+
+x_i <- -1.5
+y_i <- -1.5
+
+```
+
+### Custom function to perform coordinate descent and plot the path taken by the algorithm
+```{r}
+coordinate_descent_show <- function(x0, y0, iter = 15) {
+  
+  x_curr <- x0
+  y_curr <- y0
+  
+  # pre-allocate exactly enough rows (2 segments per iteration)
+  df_path <- data.frame(
+    x1 = rep(NA, iter * 2), 
+    y1 = rep(NA, iter * 2), 
+    x2 = rep(NA, iter * 2), 
+    y2 = rep(NA, iter * 2)
+  )
+  
+  cat("Starting values: x0 =", x0, ", y0 =", y0, "\n")
+  
+  for (i in seq_len(iter)) {
+    
+    x_old <- x_curr
+    y_old <- y_curr
+    
+    # update x
+    f_x <- function(x) { g(x, y_curr) }
+    x_curr <- golden(f_x, -1.5, 1.5)
+    
+    # insert horizontal step into the (odd-numbered) row
+    df_path[2 * i - 1, ] <- c(x1 = x_old, y1 = y_old, x2 = x_curr, y2 = y_old)
+    
+    # update y
+    f_y <- function(y) { g(x_curr, y) }
+    y_curr <- golden(f_y, -1.5, 1.5)
+    
+    # insert vertical step into the (even-numbered) row
+    df_path[2 * i, ] <- c(x1 = x_curr, y1 = y_old, x2 = x_curr, y2 = y_curr)
+    
+    cat("Iteration", i, "- x:", x_curr, " y:", y_curr, "\n")
+    
+    if (abs(x_curr - x_old) < 1e-5) {
+      break
+    }
+  }
+  
+  # trim off any unused NA rows if the loop broke early
+  df_path_subset <- na.omit(df_path)
+  
+  # plot the results 
+  p <- ggplot() +
+    geom_contour(data = contour_df, aes(x = x, y = y, z = z), binwidth = 0.9) +
+    theme_bw() +
+    geom_segment(data = df_path_subset,
+                 aes(x = x1, y = y1, xend = x2, yend = y2), 
+                 color = "red", linewidth = 1) +
+    labs(title = paste("Coordinate Descent: Starting at (", x0, ", ", y0, ")", sep=""))
+  
+  print(p)
+}
+```
+
+### Graph for starting point x = -1.5, and y = -1.5.
+
+```{r}
+coordinate_descent_show(x0 = -1.5, y0 = -1.5, iter = 15)
+```
+
+### Graph for starting point x = -1.5, and y = 1.
+
+```{r}
+coordinate_descent_show(x0 = -1.5, y0 = 1, iter = 15)
+```
+
+
+
+## 6. Extra Credit: Bisection Search Graph [up to 10 points]
+
+```{r}
+library(ggplot2)
+
+bisection_show <- function(ftn, x_l, x_r, iter = 4) {
+  
+  # save original bounds to define the x-axis limits for our plot later
+  plot_start <- x_l
+  plot_end <- x_r
+  
+  # df to track the regions we eliminate at each step
+  eliminated_regions <- data.frame(xmin = rep(NA, iter), xmax = rep(NA, iter))
+  
+  for (i in seq_len(iter)) {
+    # calculate midpoint
+    x_m <- (x_l + x_r) / 2
+    f_m <- ftn(x_m)
+    f_l <- ftn(x_l)
+    
+    # check if we accidentally hit the exact root
+    if (identical(all.equal(f_m, 0), TRUE)) { break }
+    
+    # check signs and eliminate a half
+    if (f_l * f_m < 0) {
+      # root is on the left. we eliminate the right side (from x_m to x_r)
+      eliminated_regions[i, ] <- c(xmin = x_m, xmax = x_r)
+      x_r <- x_m # update the right bound
+      
+    } else {
+      # root is on the right. we eliminate the left side (from x_l to x_m)
+      eliminated_regions[i, ] <- c(xmin = x_l, xmax = x_m)
+      x_l <- x_m
+    }
+  }
+  
+  # generate coordinates to draw the function curve
+  x_vals <- seq(plot_start, plot_end, length.out = 200)
+  fx_vals <- rep(NA, length(x_vals))
+  for (i in seq_along(x_vals)) { fx_vals[i] <- ftn(x_vals[i]) }
+  function_data <- data.frame(x = x_vals, fx = fx_vals)
+  
+  # build the plot 
+  p <- ggplot() + 
+    geom_hline(yintercept = 0, color = "darkgray", linewidth = 1) + 
+    geom_line(data = function_data, aes(x = x, y = fx),
+              color = "royalblue", linewidth = 1) +  
+    geom_rect(data = eliminated_regions,
+              aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf), 
+              fill = "red", alpha = 0.2) +
+    theme_bw() +
+    labs(title = paste("Bisection Method after", iter, "iteration(s)"))
+  
+  print(p)
+  
+  # Return the current best estimate for the root
+  (x_l + x_r) / 2
+}
+
+# Define the function f(x) = x^2 - 50
+f_target <- function(x) { x^2 - 50 }
+
+# Show the progression from 1 to 4 iterations
+bisection_show(f_target, x_l = -10, x_r = 0, iter = 1)
+bisection_show(f_target, x_l = -10, x_r = 0, iter = 2)
+bisection_show(f_target, x_l = -10, x_r = 0, iter = 3)
+bisection_show(f_target, x_l = -10, x_r = 0, iter = 4)
+```

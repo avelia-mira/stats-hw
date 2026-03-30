@@ -1,0 +1,216 @@
+---
+title: "Stats 101A - Homework 9"
+author: "Avelia Mira"
+format: 
+  pdf:
+    include-in-header:
+      - text: |
+          \usepackage{fvextra}
+          \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+editor: visual
+---
+
+## Load libraries & setup
+
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+library(car)
+library(leaps)
+library(MASS)
+
+pgatour2006 <- read_csv("pgatour2006.csv")
+```
+
+## Question 1: Model Selection for PGA Golf Performance
+
+In this problem, we use model selection techniques to identify which variables best predict prize money for professional golfers. We'll compare three selection methods: best subsets, forward stepwise, and backward stepwise. Each uses two criteria: adjusted R-squared and BIC. By examining which variables consistently appear across different methods, we can identify the most robust predictors of success on the PGA tour.
+
+### Setting up the data
+
+First, let's load the PGA data and remove the identifying variables (Name and TigerWoods).
+
+```{r}
+pga_clean <- pgatour2006 %>% dplyr::select(-Name, -TigerWoods)
+
+# Start by fitting the full model to see all 10 predictors
+pga_full <- lm(PrizeMoney ~ ., data = pga_clean)
+summary(pga_full)
+```
+
+The full model shows moderate predictive power (R² = 0.41), with 9 predictors and some high p-values. Several variables appear non-significant once other variables are included in the model, which is exactly why we need model selection. We need to find the subset of variables that truly contributes to predicting prize money.
+
+### Part A: Best Subsets Using Adjusted R-squared
+
+The best subsets approach evaluates all possible combinations of predictors and scores each by adjusted R-squared. This criterion penalizes model complexity: adding a variable only improves the score if it explains enough additional variation to offset the penalty for adding a parameter.
+
+```{r}
+# Fit best subsets regression
+best_sub <- regsubsets(PrizeMoney ~ ., data = pga_clean, nvmax = 20)
+best_summary <- summary(best_sub)
+
+# Find the model with the MAXIMUM Adjusted R-squared
+max_adjr2_index <- which.max(best_summary$adjr2)
+print(paste("Best Adj R2 is at index:", max_adjr2_index))
+print(best_summary$which[max_adjr2_index, ])
+```
+
+The algorithm selects 5 variables as the optimal subset: DrivingAccuracy, GIR (Greens in Regulation), BirdieConversion, SandSaves, and Scrambling.
+
+This makes intuitive sense. Golfers who hit fairways accurately, reach greens efficiently, convert scoring opportunities, recover from bunkers, and salvage strokes after poor shots earn more prize money. Notice that pure putting metrics don't appear; their information is likely captured through GIR.
+
+### Part B: Best Subsets Using BIC
+
+BIC (Bayesian Information Criterion) applies a stronger penalty for complexity than adjusted R-squared. It's useful when prioritizing model simplicity and interpretability over absolute predictive power.
+
+```{r}
+# Find the model with the MINIMUM BIC
+min_bic_index <- which.min(best_summary$bic)
+print(paste("Best BIC is at index:", min_bic_index))
+print(best_summary$which[min_bic_index, ])
+
+# Plotting BIC to visualize the trade-off
+plot(1:length(best_summary$bic), best_summary$bic, type = "b", 
+     ylab = "BIC", xlab = "Number of Predictors",
+     main = "BIC by Model Size")
+```
+
+BIC selects a more parsimonious model with 4 variables, dropping SandSaves: DrivingAccuracy, GIR, BirdieConversion, and Scrambling.
+
+The BIC result shows the fundamental trade-off in model selection. Both criteria agree on 4 core variables (DrivingAccuracy, GIR, BirdieConversion, Scrambling), but BIC considers SandSaves not worth the added complexity. SandSaves helps prediction, but its marginal benefit doesn't justify the extra parameter cost.
+
+### Part C: Forward Stepwise Regression
+
+Forward stepwise starts with no variables and sequentially adds the predictor that provides the greatest improvement at each step. This greedy algorithm is simpler computationally than best subsets but sometimes reaches different solutions.
+
+```{r}
+# Forward Stepwise
+fwd_sub <- regsubsets(PrizeMoney ~ ., data = pga_clean, method = "forward", nvmax = 20)
+fwd_summary <- summary(fwd_sub)
+
+print(paste("Best Forward (Adj R2) at index:", which.max(fwd_summary$adjr2)))
+print(fwd_summary$which[which.max(fwd_summary$adjr2), ])
+
+print(paste("Best Forward (BIC) at index:", which.min(fwd_summary$bic)))
+print(fwd_summary$which[which.min(fwd_summary$bic), ])
+```
+
+Forward stepwise produces identical results to best subsets. Using Adjusted R-squared yields 5 variables: DrivingAccuracy, GIR, BirdieConversion, SandSaves, Scrambling. Using BIC yields 4 variables: DrivingAccuracy, GIR, BirdieConversion, Scrambling. This confirms the best variables are robust.
+
+### Part D: Backward Stepwise Regression
+
+Backward stepwise takes the opposite approach: start with all variables and iteratively remove the predictor that contributes least to the model fit.
+
+```{r}
+# Backward Stepwise
+bwd_sub <- regsubsets(PrizeMoney ~ ., data = pga_clean, method = "backward", nvmax = 20)
+bwd_summary <- summary(bwd_sub)
+
+print(paste("Best Backward (Adj R2) at index:", which.max(bwd_summary$adjr2)))
+print(bwd_summary$which[which.max(bwd_summary$adjr2), ])
+
+print(paste("Best Backward (BIC) at index:", which.min(bwd_summary$bic)))
+print(bwd_summary$which[which.min(bwd_summary$bic), ])
+```
+
+Backward stepwise produces the same result. Both methods show identical outcomes across all three algorithms. This consistency suggests these are the truly optimal variables and represent the core drivers of PGA prize money.
+
+### Part E: Which Variables Contribute to Winning Prize Money?
+
+Four variables appear in every single model: DrivingAccuracy, GIR, BirdieConversion, and Scrambling. SandSaves appears in 3 models when Adjusted R-squared is used.
+
+The four universal variables represent fundamental dimensions of golf success. To maximize prize money, golfers should focus on hitting fairways accurately (consistency off the tee), reaching greens efficiently (more birdie opportunities), converting scoring chances (separates champions from average players), and recovering from mistakes (crucial when margins are tiny). SandSaves is a secondary factor. The consistency across algorithms suggests PGA prize money rewards golfers who execute fundamentals with precision.
+
+## Question 2: Model Validation and Transformation
+
+Now that we've identified the best-fitting model, we need to ensure it satisfies the validity assumptions required for reliable statistical inference. The full model with all 10 original variables violates several key assumptions, particularly around variance equality and normality. Through this analysis, we'll explore diagnostic methods and transformations to improve the model.
+
+### Part A: Full Model Validity Assessment
+
+Linear regression assumes residuals are normally distributed, have equal variance across fitted values, and follow a linear relationship with predictors. Let's examine whether the full model meets these requirements.
+
+```{r}
+m_full <- lm(PrizeMoney ~ ., data = pga_clean)
+plot(m_full)
+```
+
+The diagnostic plots reveal several problems:
+
+- Residuals vs Fitted (Plot 1): A curving red line with a "funnel" shape shows residuals become more spread out as fitted values increase. This suggests non-linearity and non-constant variance.
+- Scale-Location (Plot 3): The "fan" or "megaphone" shape shows heteroscedasticity: the variance of residuals is not constant. This is typical for financial data like prize money.
+- Normal Q-Q (Plot 2): The standardized residuals deviate from the theoretical line, especially in the right tail. Residuals are right-skewed with extreme outliers.
+- Residuals vs Leverage (Plot 4): High-leverage points (178, 90, 63) also have large residuals, indicating high-influence outliers.
+
+The full model violates constant variance and normality assumptions. These violations make p-values, confidence intervals, and hypothesis tests unreliable. We need transformation.
+
+### Part B: Marginal Model Plots
+
+Marginal model plots (component-component plots) show how well each individual predictor follows a linear relationship with the response, after accounting for other variables in the model.
+
+```{r}
+marginalModelPlots(m_full)
+```
+
+The marginal model plots show the blue "data" line alongside the red "model" line for each predictor. Most variables show these lines following similar patterns, suggesting reasonable linear relationships. The vertical scatter reflects the heteroscedasticity we identified: residual variance increases at higher fitted values. No predictors show obvious non-linearity. The problem is with the variance structure, not the functional form. This suggests transforming the response variable.
+
+### Part C: Log Transformation of PrizeMoney
+
+A simple rule of thumb: if your response variable spans multiple orders of magnitude (like income or prize money) and shows non-constant variance, try a log transformation.
+
+```{r}
+m_log <- lm(log(PrizeMoney) ~ ., data = pga_clean)
+plot(m_log)
+```
+
+Comparing the diagnostic plots:
+
+Scale-Location Plot (Plot 3): The severe fan shape is gone. The red line is nearly horizontal with consistent spread. The transformation solved the heteroscedasticity problem.
+
+Q-Q Residuals Plot (Plot 2): Points now track closer to the diagonal line. Minor deviation remains in the upper tail, but normality is much better.
+
+Residuals vs Fitted (Plot 1): The curving line is flatter with more random scatter. Evidence of non-linearity has diminished.
+
+Log transformation converts a multiplicative relationship into an additive one. The variation at low prize levels and larger variation at high levels becomes equalized by taking logs. We've moved from a severely violated model to one where core assumptions are reasonably satisfied.
+
+### Part D: Inverse Response Plot and Box-Cox Transformation
+
+To ensure we're using the optimal transformation, we can use two diagnostic tools: the inverse response plot (showing how fitted values map to observed values) and the Box-Cox method (finding the mathematically optimal transformation).
+
+```{r}
+inverseResponsePlot(m_full)
+boxCox(m_full)
+```
+
+The Inverse Response Plot shows fitted values and observed prize money with transformation curves. The λ = 0 curve (log transformation) provides the best fit.
+
+The Box-Cox method evaluates all power transformations y^λ finding the value that maximizes likelihood. Results show MLE at λ ≈ 0.12 with a 95% Confidence Interval containing λ = 0. The confidence interval includes zero, justifying log transformation. Using log(PrizeMoney) is simpler to interpret than Box-Cox.
+
+### Part E: Investigating Outliers and Influential Points
+
+Even after log transformation, some observations deserve investigation. These are cases where the model makes unusual predictions or where individual golfers have disproportionate influence on the regression coefficients.
+
+```{r}
+# Extract diagnostics from the log-transformed model
+std_res <- rstandard(m_log)
+leverages <- hatvalues(m_log)
+cooks_d <- cooks.distance(m_log)
+
+n <- nrow(pga_clean)
+
+# Identify problematic points
+outliers <- which(abs(std_res) > 2)
+bad_leverage <- which(leverages > (4/n) & abs(std_res) > 2)
+
+# Plot Cook's Distance to visualize influence
+plot(m_log, which = 4)
+
+cat("Outliers (|Standardized Residual| > 2):", length(outliers), "\n")
+cat("Bad Leverage Points (Leverage > 4/n AND Large Residual):", length(bad_leverage), "\n")
+```
+
+Key findings: 6 Outliers detected where model predictions notably miss. 6 Bad Leverage Points with unusual performance metrics and poor fit. Looking at the Cook's Distance plot, three observations stand out: Observation 185 with highest distance (~0.04), Observation 63 at ~0.025, and Observation 40 also elevated.
+
+Rather than removing these points, investigate them. Observation 185's metrics predict far lower prize money than observed. Could be an emerging star or data issue. Observations 63 and 40 have similar patterns. Review these golfers' actual PGA performance that year.
+
+With 196 golfers total, 6 outliers (3%) is reasonable for real-world data. These may represent genuine golf excellence that doesn't fit the typical performance-to-prize relationship. The model captures the typical relationship well, but exceptional performers naturally deviate from the pattern.

@@ -1,0 +1,412 @@
+---
+title: "Stats 101A - Homework 2"
+author: "Avelia Mira"
+format: 
+  pdf:
+    include-in-header:
+      - text: |
+          \usepackage{fvextra}
+          \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+editor: visual
+---
+
+## Load libraries & data
+
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+setwd("~/Downloads/stats/stats101a/HW2")
+
+census <- read_csv("census2020.csv")
+```
+
+## Question 1
+
+We're given that the sample size is n=30, sample mean is \$204,565.00, and sample standard deviation = \$270,536.10.
+
+### a) The standard deviation is larger than the mean. What does this tell us about the shape of the distribution?
+
+When the standard deviation is larger than the mean, consider that this means that this is indicative of a strong right-skew. This is because the mean is being pulled up-ward by outliers. The standard deviation also measures how spread out the data is from the mean and if the SD \> mean, that means that there must be a lot of high earners above the mean.
+
+Traditionally, income distributions are right-skewed, so it's generally better to assume that the higher variability comes from higher earners and not lower earners.
+
+### b) Find a 95% confidence interval for the mean income of the population
+
+For a 95% confidence interval with n=30 for specifically a mean, we would use the t-distribution. Our degrees of freedom are 29 and we can use this to use the t-critical value using the qt() function.
+
+The formula for a confidence interval for the mean population of the income is as follows:
+
+$\bar{x} \pm t^* \times \frac{s}{\sqrt{n}}$
+
+Here's the plan for the code:
+
+-   Declare our known values, being n, x bar, s, and degrees of freedom.
+
+-   Get our t-critical value for a 95% confidence interval by using the qt() function.
+
+-   Calculating the standard error for our confidence interval.
+
+-   Calculating the margin of error by multiplying the critical value and standard error together.
+
+-   Calculating the lower and upper bounds with the confidence interval.
+
+-   Printing out the results.
+
+Note: My initial result went into only the first decimal point initially, so I needed to force a concatenation with sprintf in order to force two decimal points.
+
+```{r}
+# Given values
+n <- 30
+xbar <- 204565.00
+s <- 270536.10
+df <- n - 1
+
+# Get t-critical value for 95% CI
+t_critical <- qt(0.975, df)
+t_critical
+
+# Calculate standard error
+se <- s / sqrt(n)
+se
+
+# Calculate margin of error
+me <- t_critical * se
+me
+
+# Calculate confidence interval
+ci_lower <- xbar - me
+ci_upper <- xbar + me
+
+cat(sprintf("($%.2f, $%.2f)", ci_lower, ci_upper))
+```
+
+**Answer:** The 95% confidence interval is approximately **(\$103545.16, \$305584.84)**.
+
+### c) Explain what the 95% confidence level means in this context
+
+If we were to continuously repeat a taking of random samples of size 30 (which allows us to apply CLT), about 95% of those intervals would contain the true population mean. It does not mean that there is a 95% probability in this interval because the mean is a fixed, but unknown, value. It either is, or isn't, in our interval. The confidence interval represents long-run behaviour of our confidence interval.
+
+### d) Do the conditions for a valid confidence interval appear to be met?
+
+**To remind of what conditions to check**:
+
+1.  **Randomness,** that our data must come from two independent samples or a randomized experiment.
+2.  **Independence**, that observations must be independent within each group, which can be considered to be satisfied if the sample size is less than 10% of the population. Additionally, the two groups must also be independent of each other. Alternatively, if sampling is done with replacement, we can consider independence to be automatically satisfied.
+3.  **Normality (either by testing for normality, noting the population distribution is approximately normal, or applying CLT)**, that we must either note that the population distributions are approximately normal, or (more often we will use this) that the sample sizes should be large enough (usually n ≥ 30) for the Central Limit Theorem to be applied.
+
+**In terms of verification:**
+
+-   **We can verify randomness** because the prompt quite literally says "I took a random sample... with replacement".
+-   **We can verify independence** because of the previous logic with the prompt quite literally saying "I took a random sample... with replacement", indicating that the observations are independent and randomly sampled.
+-   **We must assume that the conditions for normality can be met via CLT.** We unfortunately do not have the raw data graph in this assignment, nor am I going to bother with finding it online, so we can't verify normality via visualisation. However, census samples tend to sample thousands of people, and because n=30, classes will usually say that this is enough to assume approximate normality. However, my personal experience has shown that if the variance is large enough, it is completely possible that it won't look entirely normal, Again, I can't be bothered to find it online, so I'll just assume that we can apply CLT in this case.
+
+**Conclusion:** The conditions are **likely approximately met**, though in all honesty, the sample size being n=30 and the known right-skew of the income distribution does force us to make the judgement that the 95% confidence interval is more like "approximately 95%" confidence interval.
+
+### e) Can we conclude that there's a 95% probability a new sample's mean falls between LB and UB?
+
+**We cannot make this conclusion, as aforementioned in c.**
+
+A new sample will always have its own sample mean, meaning it will have its own sampling distribution. Our current interval is built from one sample, but a different sample of 30 different people will have a different mean as well as a different confidence interval.
+
+As such, the confidence level of 95% refers to the procedure and not necessarily the probability that another sample mean will fall into our specific interval.
+
+### f) Is the sample median greater than, less than, or about the same as the sample mean?
+
+Given that the distribution is right-skewed, the sample median should be less than the sample mean because outliers pull the mean upward while the median (or 50th percentile) tends to be less affected by outliers.
+
+------------------------------------------------------------------------
+
+## Question 2
+
+The census2020.csv contains 1000 observations, and for the sake of this question, we need to pretend it to be a population and sample from it.
+
+### a) Take a random sample of 30 people and make a histogram
+
+I'm going to set my seed to 888.
+
+The idea is we want to pipe the census data frame into the slice_sample function and set n=30 and turn off replacement.
+
+Then, we can just make a standard histogram using ggplot and geom_histogram.
+
+Note that we need to use a backtick or a quote on the column name because a hyphen messes up the syntax.
+
+```{r}
+set.seed(888)
+
+mysample <- census |> 
+  slice_sample(n = 30, replace = FALSE)
+
+# Create histogram
+ggplot(mysample, aes(x = `Income-wages`)) +
+  geom_histogram(bins = 10, fill = "green", color = "black") +
+  labs(
+    title = "Distribution of Income (Wages) for Sample of 30",
+    x = "Income from Wages ($ in USD)",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+
+summary(mysample$`Income-wages`)
+```
+
+The distribution seems to be strongly right-skewed with many gaps. Majority of incomes are below \$30,000, but because of how strongly right-skewed the data is, we can expect that the mean is very above the median (which it is). There are around 6 or 7 individuals in my sample with very high income (around \$1,000,000) which skew the mean.
+
+### b) What is the mean and SD of your sample?
+
+My game plan is to use the summarize function like in my previous assignment to make a custom summary calculating the mean and standard deviation using the appropriate functions, also removing NAs.
+
+```{r}
+mysample |> 
+  summarize(
+    mean_income = mean(`Income-wages`, na.rm = TRUE),
+    sd_income = sd(`Income-wages`, na.rm = TRUE)
+  )
+```
+
+**Answer:**
+
+-   **Mean:** \$270430
+
+-   **Standard Deviation:** \$418849
+
+It is important to note that the standard deviation is greater than the mean which confirms the right-skewed nature.
+
+### c) Use t.test() to produce 90% and 95% confidence intervals
+
+Now the game plan for this one is to put t-test results in two different variables respectively running confidence intervals of both 95% and 90%.
+
+Then, we can get the population mean by taking the mean of Income-wages, removing all NAs.
+
+Since the logic for testing if the true mean is in the confidence interval is the same for both 95% and 90%, I opted to write a function so the code is cleaner.
+
+conf.int\[1\] contains the lower bound and conf.int\[2\] contains the upper bound. And of course, opted for sprintf to get two decimal points.
+
+```{r}
+t_test_95 <- t.test(mysample$`Income-wages`, conf.level = 0.95)
+t_test_95
+
+t_test_90 <- t.test(mysample$`Income-wages`, conf.level = 0.90)
+t_test_90
+
+pop_mean <- mean(census$`Income-wages`, na.rm = TRUE)
+pop_mean
+cat(sprintf("Population parameter (true mean): $%.2f\n\n", pop_mean))
+
+check_interval <- function(t_test_obj, true_mean, label) {
+  lower <- t_test_obj$conf.int[1]
+  upper <- t_test_obj$conf.int[2]
+  
+  contains_param <- true_mean >= lower & true_mean <= upper
+  
+  cat(sprintf("%s%% CI: ($%.2f, $%.2f)\n", label, lower, upper))
+  cat(sprintf("Does %s%% CI contain parameter? %s\n\n", label, contains_param))
+}
+
+check_interval(t_test_95, pop_mean, "95")
+check_interval(t_test_90, pop_mean, "90")
+```
+
+**Answer:** With seed 888:
+
+-   **95% CI:** approximately (\$114029.13, \$426830.41), and contains the true parameter
+
+-   **90% CI**: approximately (\$140495.92, \$400363.61), and contains the true parameter
+
+### d) Validity of confidence level claim
+
+The validity of our confidence level is contingent, again, on our three criteria. **To remind of what conditions to check**:
+
+1.  **Randomness,** that our data must come from two independent samples or a randomized experiment.
+2.  **Independence**, that observations must be independent within each group, which can be considered to be satisfied if the sample size is less than 10% of the population. Additionally, the two groups must also be independent of each other.
+3.  **Normality (either by testing for normality, noting the population distribution is approximately normal, or applying CLT)**, that we must either note that the population distributions are approximately normal, or (more often we will use this) that the sample sizes should be large enough (usually n ≥ 30) for the Central Limit Theorem to be applied.
+
+**In terms of verification:**
+
+-   **We can verify randomness** because our code does randomisation without replacement.
+-   **We can verify independence** also because I would assume the sample size of n=30 is less than 10% of our population, which allows us to meet independence even if our sample is randomised.
+-   **We must assume that the conditions for normality can be met via CLT.** I am not going to bother with verifying normality via visualisation, but because n=30, classes will usually say that this is enough to assume approximate normality. However, my personal experience has shown that if the variance is large enough, it is completely possible that it won't look entirely normal, Again, I can't be bothered to find it online, so I'll just assume that we can apply CLT in this case.
+
+Because of these conditions being either assumed or verified, we can state that the sampling distribution of these confidence intervals for the sample mean will be approximately normal for n=30. This then does justify our t-distribution confidence intervals above.
+
+### e) Simulation to test if n=30 is large enough
+
+In order to test if n=30 is enough, we're
+
+a)  Treating census2020.csv\$'Income-wages' as the population. We can declare this as some population variable in R.
+b)  Take a random sample of n=30, replace=FALSE. We can do this by putting in the parameters to utilise a size of 30 and state replacement to be FALSE. This allows us to
+c)  Calculate the sample mean and store it. We can initialise a vector of size 10000 with NA values, which lets the indices to be undefined.
+d)  Repeat these steps 10000 times. We can do this by utilising a for loop from 1 to 10000.
+e)  Examine the distribution of the resulting sample means. Does it look approximately Normal? If not, what are the consequences? If so, what does this mean?
+
+```{r}
+set.seed(888)
+
+population <- census$`Income-wages`
+
+sample_means <- rep(NA, 10000)
+
+for (i in 1:10000) {
+  sample_data <- sample(population, size = 30, replace = FALSE)
+  
+  sample_means[i] <- mean(sample_data, na.rm = TRUE)
+}
+
+ggplot(data.frame(sample_means), aes(x = sample_means)) +
+  geom_histogram(bins = 50, fill = "green", color = "black", alpha = 0.7) +
+  labs(
+    title = "Distribution of 10,000 Sample Means (n=30)",
+    x = "Sample Mean Income ($)",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+
+data.frame(sample_means) |> 
+  summarize(
+    mean = mean(sample_means),
+    sd = sd(sample_means),
+    se = sd(population, na.rm = TRUE) / sqrt(30)
+  )
+```
+
+**Examination of normality:**
+
+Looking visually at the distribution of sample means, it does look approximately normal. Though there are some dips, overall it does represent a bell curve.
+
+Additionally, I did go out of my way to check a Q-Q plot (though not shown here) – though the sample means did trail off towards the tails, they generally otherwise did follow the theoretical normal line which does confirm approximate normality.
+
+As such, n=30 does appear to be large enough in this case to apply CLT. Even though the population is quite right-skewed, the distribution of sample means with n=30 is approximately normal. This does mean that our confidence interval calculations are valid to be used, that the sampling distribution of the sample means are approximately normal, and that we can use the t-distribution in our procedures to infer among our samples of size 30 from the population.
+
+------------------------------------------------------------------------
+
+## Question 3
+
+For this question, our mean incomes were greater than \$200,000 in 2020. We also need to use census2020.csv as a sample from the population of all US residents.
+
+### a) Summary statistics for income
+
+```{r}
+census |> 
+  summarize(
+    mean = mean(`Income-wages`, na.rm = TRUE),
+    median = median(`Income-wages`, na.rm = TRUE),
+    sd = sd(`Income-wages`, na.rm = TRUE),
+    q1 = quantile(`Income-wages`, 0.25, na.rm = TRUE),
+    q3 = quantile(`Income-wages`, 0.75, na.rm = TRUE),
+    iqr = q3 - q1
+  )
+```
+
+**Answer:**
+
+**Mean:** \$224209
+
+**Median:** \$30,000
+
+**Standard Deviation:** \$376107
+
+**IQR:** \$104,000 - \$0 (range of 104,000)
+
+### b) State null and alternative hypotheses
+
+-   **Ho:** mu = \$200,000. Our true mean income is equivalent to \$200,000.
+-   **Ha:** mu \> \$200,000 (mean income is greater than \$200,000)
+
+This is a one-sample, right-tailed t-test for mean based on the claim of the politician.
+
+### c) Observed t-statistic
+
+```{r}
+t_test_result <- t.test(census$`Income-wages`, 
+                        mu = 200000, 
+                        alternative = "greater")
+t_test_result
+
+t_stat <- t_test_result$statistic
+t_stat
+```
+
+The observed t-statistic is approximately 1.977596.
+
+### d) P-value
+
+```{r}
+p_value <- t_test_result$p.value
+p_value
+```
+
+**Answer:** The p-value is about 0.0241244.
+
+### e) Conclusion using α = 0.05
+
+```{r}
+alpha <- 0.05
+cat("p-value =", p_value, "\n")
+cat("α =", alpha, "\n")
+cat("Reject H₀?", p_value < alpha, "\n")
+```
+
+**Answer:** Because our p-value is less than the alpha level of 0.05, we reject the null hypothesis. We believe there to be evidence that the true mean income is greater than \$200,000.
+
+### f) What a 5% significance level means in this context
+
+A 5% significance level means that if the true population mean income were actually 200,000, there would be a 5% chance of observing a sample as extreme or more extreme than what we just got in the positive direction.
+
+As such, given our other answers, we rejected the null hypothesis or other words conclude that we have evidence that the true population of mean income is greater than 200,000 because our sample would only occur less than 5% of the time if the null hypothesis were true. This procedure would make sure we don't make false conclusions because of random sampling variation.
+
+------------------------------------------------------------------------
+
+## Question 4
+
+**Question:** Do males and females have different mean incomes?
+
+### a) Create a graphic comparing male and female salaries
+
+```{r}
+unique(census$Sex)
+
+ggplot(census, aes(x = factor(Sex), y = `Income-wages`, fill = factor(Sex))) +
+  geom_boxplot(alpha = 0.7) +
+  labs(
+    title = "Comparison of Income (Wages) by Gender",
+    x = "Gender",
+    y = "Income from Wages ($)",
+    fill = "Gender"
+  ) +
+  scale_fill_discrete(labels = c("Male" = "Male", "Female" = "Female")) +
+  theme_minimal()
+```
+
+**Interpretation:** I would say that the box plot does show that the males and females have similar median incomes around the \$20,000-\$25,000. However, males have greater income variability especially with several observations exceeding \$250,000. As such, though a good amount could be comparable, there is greater variability with the males leaning towards them being higher earners which could suggest greater income inequality.
+
+### b) Two-sample t-test for difference in mean incomes
+
+```{r}
+census |> 
+  group_by(Sex) |> 
+  summarize(
+    n = n(),
+    mean_income = mean(`Income-wages`, na.rm = TRUE),
+    sd_income = sd(`Income-wages`, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+t_test_gender <- t.test(`Income-wages` ~ Sex, data = census)
+t_test_gender
+
+t_stat_gender <- t_test_gender$statistic
+p_val_gender <- t_test_gender$p.value
+
+cat("t-statistic: ", round(t_stat_gender, 4), "\n", sep="")
+cat("p-value: ", p_val_gender, "\n", sep="")
+```
+
+**Ho:** mu_male = mu_female. We believe that males and females have equal mean incomes.
+
+**Ha:** mu_male ≠ mu_female. We believe that males and females have different mean incomes.
+
+**t-statistic:** approximately -0.9032
+
+**p-value:** 0.3666273
+
+Because the p-value of 0.3666273 is greater than 0.05, we fail to reject the null hypothesis. We do not believe that there is evidence to believe that males and females have different mean incomes. The p-value of 0.3666273 is much greater than 0.05, which suggests that the variability in sample means is likely due to random sampling variation instead of a true difference in population means.

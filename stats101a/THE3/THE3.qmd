@@ -1,0 +1,141 @@
+---
+title: "Stats 101A - Take-Home Exam 3"
+author: "Avelia Mira"
+format: 
+  pdf:
+    pdf-engine: pdflatex
+    include-in-header:
+      - text: |
+          \usepackage{fvextra}
+          \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+          
+editor: visual
+---
+
+# Q1 Mario Kart
+
+All of these problems use the mariokart.csv data file. You've seen this data before; it contains data on a number of auctions for selling Mario Karts. You haven't yet seen it in the context of multiple regression (with the exception of this week's homework), but you can still use what you know about simple linear regression to answer these questions; the same reasoning and processes apply.
+
+To begin, fit a model to predict the total price at the end of the auction (totalPr) on the duration (number of days the auction lasted), the condition (cond: new/used), the starting price (startPr) and the number of wheels (wheels):
+
+```         
+lm(formula = totalPr ~ startPr + cond + nBids + duration + wheels, 
+    data = mariokart)
+```
+
+This will produce the LS fit: $${\hat {\mathrm{totalPr}}}={\hat \beta_0}+{\hat \beta_1}{\mathrm{startPr}}+{\hat \beta_2}{\mathrm{cond}} + {\hat \beta_3}{\mathrm{nBids}} + {\hat \beta_4}{\mathrm{duration}} + {\hat \beta_5}{\mathrm{wheels}}$$
+
+## Q1.1: Trend
+
+In your opinion, is the trend component of the model valid? Answer yes or no and explain. Your explanation should identify any diagnostic plots or procedures you used and explain why they led you to your conclusion.
+
+**Answer:** In my opinion, the trend component is valid. I used the residuals vs. fitted diagnostic plot in order to check the condition, and the plot shows that the residuals are randomly scattered across the horizontal zero line without any clear pattern. It could be said that there are slight wiggles in the red line, but the line is more unreliable when the data is sparse, particularly at the tails where we do see said wiggles. Because there is an absence in a trend or a curved pattern in the residuals, the linear trend modeled matches the data.
+
+## Q1.2: Code for Question 1
+
+```{r q1-code}
+# Set working directory to THE3 folder
+
+setwd("/Users/mariaannalissasantos/Downloads/stats/stats101a/THE3")
+
+# Load necessary libraries
+library(tidyverse)
+library(broom)
+
+# Load the data (note the capital K)
+mariokart <- read_csv("marioKart.csv")
+
+model <- lm(formula = totalPr ~ startPr + cond + nBids + duration + wheels, 
+    data = mariokart)
+
+plot(model, 1)
+```
+
+# Q2 Normality
+
+## Q2.1: Normality
+
+In your opinion, is the Normal condition valid? Answer yes or no and explain.
+
+**Answer:** In my opinion, yes, the Normal condition is valid. To gauge this, I used the Normal Q-Q plot to check this condition, which showed that the points fall along a relatively straight-ish diagonal line. Though there is deviation at the tails, it is important to note that this was fine in the lecture and since the plot does not show excessive straying from the straight line, it suggests that the errors are Normally distributed.
+
+## Q2.2: Code for Question 2
+
+```{r q2-code}
+plot(model, which = 2)
+```
+
+# Q3 Constant Variance
+
+## Q3.1: Constant Variance
+
+In your opinion, is the constant variance condition valid? Answer yes or no and explain.
+
+**Answer:** In my opinion, the constant variance condition is valid. In order to check this, I used the Scale-Location plot in order to check for a lack of an increasing or decreasing trend in this plot. The red smoother line is relatively horizontal, and the standardised residuals are scattered with a roughly equal spread across the range of fitted values. Because there is no clear trend or "fan shape," the constant variance condition is assumed to be valid.
+
+## Q3.2: Code for Question 3
+
+```{r q3-code}
+plot(model, which = 3)
+```
+
+# Q4 Leverage
+
+## Q4.1: Bad Leverage
+
+Identify any "bad" leverage points. **Use the rule that a "high" leverage value is \> 12/n**. If none, write "none". (Note: this rule is different from what you saw with simple linear regression, which used a cut-off of 4/n. The new cutoff reflects the inclusion of more predictor variables.)
+
+**Answer:** Using the high leverage definition of 12 \> n and the absolute value of standardised residuals being over 2 (which was modified from the lecture's definition using a cut-off of 4/n), there is one bad leverage point of observation 67 (ID 360193279993). This is a used Mario Kart auction that lasted 7 days with 12 bids, starting at \$0.99, with a total price of \$64.50, and notably has 3 wheels (unusual for a Mario Kart).
+
+## Q4.2: Code for Question 4
+
+```{r q4-code}
+n <- nrow(mariokart)
+
+standardised_residuals <- rstandard(model)
+leverages <- hatvalues(model)
+
+# based on high leverage definition of > 12/n and the absolute value of them over 2
+bad_idx <- which(leverages > (12/n) & abs(standardised_residuals) > 2)
+
+print(bad_idx)
+mariokart[bad_idx, ]
+length(bad_idx)
+```
+
+# Q5 Influence
+
+## Q5.1: Influential
+
+Identify any high influence points. Identify what your definition of "high influence" is; you are welcome to choose, as long as you explain. If none, write "none".
+
+**Answer:** High influence points are defined as any observation with a Cook's Distance greater than the threshold of 4/(n-2) based on our lectures, and coding this and using the Cook's Distance plot for good measure, we can come up with 10 high influence points: observations 5, 16, 38, 43, 51, 59, 64, 67, 82, and 119. These points have Cook's Distance values exceeding the threshold, meaning that removing any of these observations would notably affect the regression estimates.
+
+## Q5.2: Code for Question 5
+
+```{r q5-code}
+cooks_distance <- cooks.distance(model)
+
+# "high influence" (4 / (n-2))
+n <- nrow(mariokart)
+inf_threshold <- 4 / (n - 2)
+
+influential_idx <- which(cooks_distance > inf_threshold)
+
+print(influential_idx)
+mariokart[influential_idx, ]
+
+plot(model, which = 4)
+```
+
+# Q6 Clarification
+
+If you had to make any assumptions for any ambiguously worded questions, please explain here.
+
+**Answer:**
+
+# Q7 AI Tools Used
+
+If you used AI, please state which AI models you used and where and how you used them. If none, write "none".
+
+**Answer:**

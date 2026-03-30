@@ -1,0 +1,198 @@
+---
+title: "Stats 101A - Homework 5"
+author: "Avelia Mira"
+format: 
+  pdf:
+    include-in-header:
+      - text: |
+          \usepackage{fvextra}
+          \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+editor: visual
+---
+
+## Load libraries & setup
+
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+setwd("~/Downloads/stats/stats101a/HW5")
+```
+
+## Question 1: Housing Indicators (Problem 2 from book)
+
+### a) Fit the model and find 95% CI for slope
+
+First, we can load the `indicators.txt` data and fit the linear regression model.
+
+```{r}
+#| message: false
+indicators <- read.table("indicators.txt", header = TRUE)
+
+sum(is.na(indicators))
+
+model_indicators <- lm(PriceChange ~ LoanPaymentsOverdue, data = indicators)
+summary(model_indicators)
+
+confint(model_indicators, "LoanPaymentsOverdue", level = 0.95)
+```
+
+The 95% confidence interval for the slope $\b_1$ is approximately **\[-4.163, -0.334\]**. Because the interval does not contain 0 and is entirely negative, we believe that there is evidence that there is a negative linear association between the percentage of overdue loans and the percentage change in housing prices. As overdue loans increase, housing prices tend to decrease.
+
+### b) Make a residual plot and comment on validity
+
+```{r}
+plot(indicators$LoanPaymentsOverdue, resid(model_indicators),
+     main = "Residual Plot for Housing Indicators Model",
+     xlab = "Percentage of Overdue Loans",
+     ylab = "Residuals",
+     pch = 19, cex = 0.8)
+abline(h = 0, lwd = 2, col = "red")
+```
+
+Based on the residual plot, we can see that the residuals seem to be random without a systematic pattern. Homoscedasticity seems to be reasonable and the points do not have a curved pattern. There also doesn't seem to be any outliers. All of which suggests the linear model to be appropriate.
+
+------------------------------------------------------------------------
+
+## Question 2: Problem 3 from book - Invoice Processing
+
+```{r}
+#| message: false
+invoices <- read.table("invoices.txt", header = TRUE)
+
+model_invoices <- lm(Time ~ Invoices, data = invoices)
+summary(model_invoices)
+```
+
+### a) 95% confidence interval for start-up time (β₀)
+
+```{r}
+confint(model_invoices, "(Intercept)", level = 0.95)
+```
+
+The 95% confidence interval for the start-up time $\b_0$ is approximately **\[0.391, 0.893\] hours**. We are 95% confident that the fixed start-up time for processing invoices (when no invoices are processed) is between approximately the 0.391 and 0.893 hour mark.
+
+### b) Test if average processing time per invoice = 0.01 hours
+
+We want to test $H_0: \b_1 = 0.01$ vs $H_a: \b_1 \neq 0.01$.
+
+```{r}
+b1_hat <- coef(model_invoices)["Invoices"]
+se_b1 <- summary(model_invoices)$coefficients["Invoices", "Std. Error"]
+
+t_stat <- (b1_hat - 0.01) / se_b1
+
+# Get p-value (two-sided test)
+df <- df.residual(model_invoices)
+p_value <- 2 * pt(abs(t_stat), df, lower.tail = FALSE)
+
+cat("t-statistic:", round(t_stat, 4), "\n")
+cat("p-value:", round(p_value, 4), "\n")
+```
+
+Because we have a t-statistic of approximately 1.58 giving us a p-value of 0.126 (which is greater than 0.05), we **fail to reject** the null hypothesis. We do not believe there is significant evidence to conclude that the average processing time per invoice differs from the benchmark of 0.01 hours (0.6 minutes). The data is consistent with the best practice benchmark.
+
+### c) Prediction interval for 130 invoices
+
+```{r}
+new_data <- data.frame(Invoices = 130)
+
+predict(model_invoices, newdata = new_data)
+
+predict(model_invoices, newdata = new_data, interval = "prediction", level = 0.95)
+```
+
+The point estimate for processing time for 130 invoices is approximately **2.11 hours**. The 95% prediction interval is approximately **\[1.423, 2.796\] hours**. We are 95% confident that the time taken to process 130 invoices will fall between 1.423 and 2.796 hours.
+
+------------------------------------------------------------------------
+
+## Question 3: Problem 5 - Comparing Two Models
+
+Based on Figure 2.8, **Model 1** shows points very tightly clustered around the regression line with a strong positive linear relationship with the points that follow the line closely. Comparatively, **Model 2** shows points widely scattered with much more variability around the regression line. The relationship appears weak.
+
+RSS measures the variability of points around the fitted line. Model 1 has points very close to the line, so RSS is small while Model 2 has points far from the line, so RSS is large. Therefore, **RSS for Model 1 \< RSS for Model 2**.
+
+SSR measures how much of the total variability is explained by the regression. Model 1 shows a strong relationship where x1 explains most of the variability in Y, so SSR is large while Model 2 shows a weak relationship where x2 explains little of the variability in Y, so SSR is small. Therefore, **SSR for Model 1 \> SSR for Model 2**.
+
+As such, the answer is d: RSS for model 1 is less than RSS for model 2, while SSR for model 1 is greater than SSR for model 2.
+
+This is because Model 1 demonstrates a much stronger linear relationship with points tightly clustered around the regression line which should result in smaller residuals (lower RSS) and more explained variance (higher SSR) while Model 2 shows a weak relationship with scattered points, resulting in larger residuals (higher RSS) and less explained variance (lower SSR).
+
+------------------------------------------------------------------------
+
+## Question 4: ANOVA Table Calculations from R Output
+
+Given the R output for the armspan-height model, we'll calculate the ANOVA components using the following: - n = 35 observations (df = 33 + 1 + 1) - Residual standard error = 2.418 on 33 df - $R^2 = 0.7254$ - F-statistic = 87.17 on 1 and 33 DF
+
+```{r}
+# Given values
+n <- 35
+residual_se <- 2.418
+df_residual <- 33
+R_squared <- 0.7254
+
+# a) RSS (Residual Sum of Squares)
+RSS <- residual_se^2 * df_residual
+cat("a) RSS =", round(RSS, 4), "\n")
+
+# b) SSR (Regression Sum of Squares)
+# Total SS = RSS / (1 - R^2)
+SST <- RSS / (1 - R_squared)
+SSR <- SST - RSS
+cat("b) SSR =", round(SSR, 4), "\n")
+
+df_regression <- 1  # one predictor
+Mean_SSR <- SSR / df_regression
+cat("c) Mean SSR =", round(Mean_SSR, 4), "\n")
+
+cat("d) Total SS =", round(SST, 4), "\n")
+
+r <- sqrt(R_squared)
+cat("e) Correlation coefficient r =", round(r, 4), "\n")
+```
+
+**Results:** - **a) RSS** = 192.94 - **b) SSR** = 509.69 - **c) Mean SSR** = 509.69 (same as SSR since df = 1) - **d) Total SS** = 702.63 - **e) Correlation coefficient r** = 0.8517 (positive since slope is positive)
+
+------------------------------------------------------------------------
+
+## Question 5: Generating Linear Model Data
+
+### a) Generate 100 observations with minimal SE for slope
+
+To minimise the standard error of the slope estimator, we want to maximise $\sum(x_i - \bar{x})^2$. Given x is within \[0, 100\], this is maximised when half the points are at 0 and half at 100 (maximum spread).
+
+```{r}
+set.seed(123)
+
+b_0 <- 1
+b_1 <- 10
+sigma <- 20
+n <- 100
+
+x <- c(rep(0, 50), rep(100, 50))
+
+epsilon <- rnorm(n, mean = 0, sd = sigma)
+y <- b_0 + b_1 * x + epsilon
+
+model_sim <- lm(y ~ x)
+summary(model_sim)
+
+se_slope <- summary(model_sim)$coefficients["x", "Std. Error"]
+cat("\nStandard error of slope estimator:", round(se_slope, 6), "\n")
+```
+
+**The standard error of the slope estimator is approximately 0.0366.**
+
+This specific methodology is able to minimise the SE because the predictor values are maximally spread apart (half at 0, half at 100). This maximises $\sum(x_i - \bar{x})^2$ in the denominator of the SE formula: $SE(\hat{\beta}_1) = \sigma / \sqrt{\sum(x_i - \bar{x})^2}$.
+
+### b) Explaining standard error of slope to a beginning statistics student
+
+The standard error of the slope tells us about the **uncertainty** or **precision** of our estimate of how Y changes with X.
+
+If we collected new data and tried to determine the model which best fit the data many times, we'd get slightly different slope estimates each time due to random variation. The standard error measures the typical amount by which our slope estimate would vary from sample to sample.
+
+A **smaller standard error** means our slope estimate is more precise and reliable, we have more confidence in the estimated relationship, and the data points cluster more tightly around the line, or we have more data spread out over a wide range of x values.
+
+A **larger standard error** means there's more uncertainty about the true slope, the slope could vary quite a bit if we collected new data, and we're less confident about the exact strength of the relationship.
+
+In our example, the standard error of \~0.0366 means if the true slope is 10, our estimate might typically be off by about 0.0366 in either direction due to random sampling variation. In context of what our slope is, this is a very small standard error, which makes sense because we've maximised the spread in x values and we're estimating the slope accurately.

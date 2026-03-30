@@ -1,0 +1,1001 @@
+State,sample,Age,Sex,Income-total,Poverty,Year,Income-wages
+Tennessee,1,10,Male,,,2020,999999
+Kentucky,1,62,Female,,,2020,12000
+Texas,1,10,Male,,,2020,999999
+Michigan,1,40,Female,,,2020,45000
+Idaho,1,11,Female,,,2020,999999
+Wisconsin,1,9,Female,,,2020,999999
+Indiana,1,28,Female,,,2020,38000
+Texas,1,23,Female,,,2020,54000
+New Jersey,1,15,Male,,,2020,999999
+California,1,31,Male,,,2020,35000
+Georgia,1,72,Female,,,2020,0
+Utah,1,41,Male,,,2020,65000
+Florida,1,61,Male,,,2020,0
+Georgia,1,15,Female,,,2020,999999
+Ohio,1,14,Female,,,2020,999999
+Florida,1,82,Male,,,2020,0
+New Hampshire,1,37,Male,,,2020,0
+Texas,1,13,Female,,,2020,999999
+Wisconsin,1,51,Male,,,2020,100000
+Texas,1,23,Female,,,2020,24000
+New Mexico,1,30,Male,,,2020,84000
+Kentucky,1,29,Male,,,2020,55000
+South Carolina,1,27,Male,,,2020,50000
+Tennessee,1,59,Male,,,2020,41300
+Texas,1,40,Female,,,2020,0
+Indiana,1,59,Female,,,2020,50000
+Florida,1,41,Female,,,2020,30000
+Missouri,1,1,Male,,,2020,999999
+Florida,1,38,Male,,,2020,104000
+South Carolina,1,81,Female,,,2020,0
+Michigan,1,60,Female,,,2020,62000
+Oregon,1,57,Male,,,2020,0
+Washington,1,32,Male,,,2020,39000
+Texas,1,48,Male,,,2020,1900
+Florida,1,18,Male,,,2020,19400
+California,1,87,Female,,,2020,0
+Texas,1,44,Male,,,2020,0
+Oregon,1,79,Male,,,2020,0
+Illinois,1,9,Female,,,2020,999999
+California,1,27,Female,,,2020,0
+Wisconsin,1,35,Male,,,2020,33000
+Massachusetts,1,78,Female,,,2020,0
+Kentucky,1,38,Female,,,2020,80000
+New York,1,72,Female,,,2020,0
+California,1,38,Female,,,2020,0
+Texas,1,57,Female,,,2020,0
+Iowa,1,48,Male,,,2020,0
+Washington,1,10,Male,,,2020,999999
+Minnesota,1,34,Female,,,2020,15000
+California,1,15,Female,,,2020,999999
+Illinois,1,22,Male,,,2020,3000
+California,1,59,Female,,,2020,0
+Mississippi,1,77,Female,,,2020,0
+Georgia,1,8,Female,,,2020,999999
+Michigan,1,26,Female,,,2020,6500
+Pennsylvania,1,29,Female,,,2020,700
+Texas,1,51,Male,,,2020,80000
+Florida,1,72,Female,,,2020,0
+New York,1,31,Female,,,2020,41600
+Arkansas,1,93,Female,,,2020,0
+Tennessee,1,44,Male,,,2020,105000
+Colorado,1,62,Male,,,2020,100000
+Kentucky,1,14,Female,,,2020,999999
+New York,1,44,Female,,,2020,53000
+Texas,1,29,Male,,,2020,10000
+Oklahoma,1,4,Female,,,2020,999999
+Pennsylvania,1,12,Female,,,2020,999999
+New York,1,1,Female,,,2020,999999
+New Jersey,1,59,Male,,,2020,135000
+California,1,12,Female,,,2020,999999
+Texas,1,72,Female,,,2020,4000
+California,1,47,Male,,,2020,13000
+Arizona,1,52,Male,,,2020,200000
+Washington,1,45,Male,,,2020,67000
+Florida,1,0,Female,,,2020,999999
+Minnesota,1,60,Female,,,2020,60000
+Texas,1,49,Female,,,2020,1300
+Virginia,1,43,Male,,,2020,0
+Florida,1,25,Female,,,2020,45800
+Ohio,1,48,Female,,,2020,26000
+California,1,30,Female,,,2020,25400
+North Carolina,1,13,Male,,,2020,999999
+Louisiana,1,23,Male,,,2020,5000
+New York,1,61,Female,,,2020,0
+Arkansas,1,11,Male,,,2020,999999
+New Mexico,1,45,Female,,,2020,45000
+Missouri,1,58,Female,,,2020,20000
+California,1,33,Female,,,2020,0
+Idaho,1,71,Female,,,2020,0
+Florida,1,3,Male,,,2020,999999
+Hawaii,1,30,Female,,,2020,0
+Virginia,1,59,Female,,,2020,109000
+New York,1,72,Male,,,2020,0
+Tennessee,1,56,Female,,,2020,43700
+Minnesota,1,89,Male,,,2020,0
+Texas,1,47,Female,,,2020,0
+Washington,1,30,Male,,,2020,150000
+Arkansas,1,31,Male,,,2020,0
+Ohio,1,7,Male,,,2020,999999
+Georgia,1,50,Female,,,2020,40000
+Texas,1,4,Male,,,2020,999999
+West Virginia,1,31,Male,,,2020,12000
+Arizona,1,57,Female,,,2020,20000
+Florida,1,83,Male,,,2020,0
+Illinois,1,67,Female,,,2020,46000
+Utah,1,21,Male,,,2020,0
+Washington,1,26,Male,,,2020,30000
+Oregon,1,6,Female,,,2020,999999
+Massachusetts,1,3,Female,,,2020,999999
+Colorado,1,56,Male,,,2020,33600
+Connecticut,1,4,Male,,,2020,999999
+Ohio,1,8,Male,,,2020,999999
+Indiana,1,39,Male,,,2020,0
+Ohio,1,57,Female,,,2020,24000
+California,1,18,Male,,,2020,0
+Washington,1,53,Female,,,2020,45000
+Oregon,1,37,Male,,,2020,225000
+Michigan,1,54,Female,,,2020,20000
+Illinois,1,15,Female,,,2020,999999
+Ohio,1,34,Female,,,2020,31000
+Texas,1,20,Female,,,2020,0
+Texas,1,43,Male,,,2020,472000
+California,1,26,Female,,,2020,1000
+Illinois,1,94,Female,,,2020,0
+California,1,8,Female,,,2020,999999
+Connecticut,1,83,Male,,,2020,0
+Kentucky,1,25,Male,,,2020,75000
+Wisconsin,1,33,Female,,,2020,42000
+Florida,1,48,Female,,,2020,67000
+Idaho,1,13,Male,,,2020,999999
+California,1,27,Female,,,2020,100000
+Georgia,1,59,Female,,,2020,0
+Delaware,1,84,Male,,,2020,0
+California,1,35,Male,,,2020,0
+California,1,42,Male,,,2020,0
+Tennessee,1,26,Female,,,2020,10500
+Michigan,1,75,Female,,,2020,0
+Tennessee,1,70,Male,,,2020,15500
+Delaware,1,57,Female,,,2020,112000
+Florida,1,84,Female,,,2020,0
+Washington,1,64,Female,,,2020,0
+Alabama,1,33,Female,,,2020,70000
+Texas,1,49,Male,,,2020,85000
+Illinois,1,72,Female,,,2020,0
+Wisconsin,1,38,Female,,,2020,44000
+Texas,1,31,Female,,,2020,0
+Texas,1,67,Female,,,2020,0
+Illinois,1,72,Female,,,2020,0
+North Carolina,1,30,Female,,,2020,15000
+California,1,39,Male,,,2020,14000
+Florida,1,8,Male,,,2020,999999
+Michigan,1,22,Male,,,2020,0
+Michigan,1,67,Female,,,2020,0
+New York,1,57,Female,,,2020,34000
+Alabama,1,39,Female,,,2020,32500
+Florida,1,70,Male,,,2020,5000
+Virginia,1,36,Male,,,2020,120000
+Virginia,1,39,Male,,,2020,55000
+Utah,1,12,Male,,,2020,999999
+Florida,1,23,Female,,,2020,19000
+Florida,1,14,Male,,,2020,999999
+Texas,1,15,Male,,,2020,999999
+Colorado,1,30,Male,,,2020,40000
+California,1,26,Female,,,2020,0
+New Jersey,1,17,Female,,,2020,0
+New Jersey,1,15,Female,,,2020,999999
+Arkansas,1,15,Female,,,2020,999999
+Maryland,1,62,Male,,,2020,25000
+Georgia,1,13,Female,,,2020,999999
+New Jersey,1,32,Female,,,2020,3500
+California,1,45,Male,,,2020,25000
+Illinois,1,22,Male,,,2020,60000
+North Carolina,1,18,Male,,,2020,0
+Wisconsin,1,49,Male,,,2020,70000
+Texas,1,78,Female,,,2020,0
+Illinois,1,59,Male,,,2020,0
+North Carolina,1,28,Male,,,2020,52000
+Florida,1,76,Male,,,2020,0
+Maryland,1,80,Female,,,2020,0
+Iowa,1,1,Female,,,2020,999999
+New York,1,15,Male,,,2020,999999
+California,1,0,Male,,,2020,999999
+New Jersey,1,45,Female,,,2020,0
+Louisiana,1,20,Female,,,2020,8000
+Virginia,1,59,Female,,,2020,0
+California,1,35,Female,,,2020,30000
+Texas,1,13,Female,,,2020,999999
+New York,1,29,Female,,,2020,60000
+California,1,61,Female,,,2020,52000
+California,1,43,Female,,,2020,0
+Illinois,1,65,Female,,,2020,10000
+Texas,1,65,Male,,,2020,0
+California,1,68,Female,,,2020,0
+North Carolina,1,9,Male,,,2020,999999
+Texas,1,38,Female,,,2020,45000
+Pennsylvania,1,66,Male,,,2020,0
+Oklahoma,1,56,Male,,,2020,0
+Texas,1,62,Male,,,2020,165000
+Missouri,1,39,Male,,,2020,60000
+Wisconsin,1,6,Male,,,2020,999999
+Arkansas,1,6,Female,,,2020,999999
+Arkansas,1,55,Male,,,2020,0
+Colorado,1,37,Male,,,2020,71000
+Nebraska,1,61,Female,,,2020,6000
+Florida,1,74,Female,,,2020,0
+Ohio,1,47,Female,,,2020,86000
+Florida,1,94,Female,,,2020,0
+New Jersey,1,12,Male,,,2020,999999
+Arkansas,1,81,Female,,,2020,0
+California,1,30,Female,,,2020,45500
+Ohio,1,75,Female,,,2020,0
+Indiana,1,1,Female,,,2020,999999
+Minnesota,1,28,Female,,,2020,10000
+Utah,1,1,Male,,,2020,999999
+Iowa,1,33,Male,,,2020,83000
+Iowa,1,72,Male,,,2020,0
+Iowa,1,53,Male,,,2020,74000
+Ohio,1,26,Female,,,2020,20000
+Texas,1,33,Female,,,2020,0
+Washington,1,51,Female,,,2020,72000
+Texas,1,22,Male,,,2020,80
+Nebraska,1,39,Female,,,2020,36000
+California,1,45,Female,,,2020,0
+Minnesota,1,39,Male,,,2020,90000
+New York,1,52,Male,,,2020,661000
+Arizona,1,14,Male,,,2020,999999
+California,1,47,Female,,,2020,0
+California,1,59,Female,,,2020,17000
+Massachusetts,1,7,Female,,,2020,999999
+Missouri,1,44,Male,,,2020,29100
+Georgia,1,27,Male,,,2020,25000
+Washington,1,43,Male,,,2020,32000
+Massachusetts,1,68,Male,,,2020,90000
+Illinois,1,25,Female,,,2020,0
+California,1,57,Female,,,2020,99000
+Indiana,1,44,Male,,,2020,0
+California,1,62,Male,,,2020,34500
+Maryland,1,56,Male,,,2020,11000
+Tennessee,1,39,Female,,,2020,15000
+Florida,1,50,Female,,,2020,12000
+Illinois,1,16,Female,,,2020,0
+California,1,60,Female,,,2020,0
+Florida,1,71,Female,,,2020,0
+Massachusetts,1,87,Female,,,2020,0
+California,1,29,Female,,,2020,0
+Minnesota,1,14,Female,,,2020,999999
+Alabama,1,40,Male,,,2020,36000
+Florida,1,41,Male,,,2020,20000
+California,1,20,Male,,,2020,0
+Indiana,1,81,Female,,,2020,14400
+Washington,1,29,Male,,,2020,75000
+Texas,1,27,Male,,,2020,8000
+Illinois,1,74,Female,,,2020,0
+Idaho,1,26,Male,,,2020,16000
+Arizona,1,2,Female,,,2020,999999
+Pennsylvania,1,42,Female,,,2020,0
+California,1,29,Male,,,2020,0
+Tennessee,1,63,Female,,,2020,0
+Pennsylvania,1,60,Female,,,2020,7600
+Texas,1,3,Female,,,2020,999999
+Connecticut,1,41,Female,,,2020,92000
+Arkansas,1,12,Female,,,2020,999999
+Ohio,1,62,Female,,,2020,36000
+Ohio,1,83,Male,,,2020,25000
+Hawaii,1,52,Male,,,2020,27000
+Nebraska,1,71,Male,,,2020,0
+Idaho,1,15,Male,,,2020,999999
+Idaho,1,20,Female,,,2020,13500
+Georgia,1,50,Female,,,2020,66000
+Florida,1,38,Male,,,2020,30000
+Minnesota,1,94,Female,,,2020,0
+Utah,1,67,Female,,,2020,0
+Michigan,1,9,Female,,,2020,999999
+Virginia,1,94,Female,,,2020,0
+Texas,1,11,Female,,,2020,999999
+North Carolina,1,43,Male,,,2020,48000
+Illinois,1,36,Male,,,2020,68000
+New Jersey,1,56,Female,,,2020,14000
+Michigan,1,78,Female,,,2020,0
+Maryland,1,21,Female,,,2020,0
+Virginia,1,44,Female,,,2020,45000
+Michigan,1,65,Female,,,2020,35000
+Ohio,1,21,Male,,,2020,11000
+California,1,39,Male,,,2020,48000
+Illinois,1,13,Female,,,2020,999999
+Iowa,1,52,Female,,,2020,34000
+Minnesota,1,11,Female,,,2020,999999
+Texas,1,50,Male,,,2020,0
+Texas,1,43,Male,,,2020,23000
+New York,1,12,Female,,,2020,999999
+California,1,78,Female,,,2020,0
+Maine,1,38,Female,,,2020,9200
+Oregon,1,37,Male,,,2020,110000
+Washington,1,59,Male,,,2020,78000
+Texas,1,28,Female,,,2020,4400
+Illinois,1,26,Male,,,2020,4000
+Ohio,1,63,Female,,,2020,0
+Kansas,1,18,Male,,,2020,6000
+Colorado,1,62,Female,,,2020,170000
+Idaho,1,48,Male,,,2020,80000
+California,1,11,Male,,,2020,999999
+Florida,1,64,Female,,,2020,0
+Ohio,1,31,Female,,,2020,70000
+Missouri,1,71,Male,,,2020,0
+Texas,1,2,Female,,,2020,999999
+California,1,25,Male,,,2020,40000
+Maryland,1,15,Female,,,2020,999999
+Wisconsin,1,11,Female,,,2020,999999
+Michigan,1,2,Female,,,2020,999999
+Arkansas,1,30,Female,,,2020,26000
+Oregon,1,35,Female,,,2020,0
+Arizona,1,0,Male,,,2020,999999
+Florida,1,15,Female,,,2020,999999
+Kansas,1,69,Female,,,2020,0
+Oklahoma,1,20,Male,,,2020,0
+Pennsylvania,1,64,Male,,,2020,0
+Pennsylvania,1,21,Female,,,2020,13000
+Arkansas,1,58,Female,,,2020,150000
+California,1,51,Male,,,2020,24900
+Michigan,1,0,Female,,,2020,999999
+Washington,1,38,Female,,,2020,0
+California,1,4,Male,,,2020,999999
+Florida,1,51,Female,,,2020,0
+Illinois,1,7,Female,,,2020,999999
+Arizona,1,26,Female,,,2020,30000
+Texas,1,80,Male,,,2020,0
+Pennsylvania,1,31,Male,,,2020,28000
+Oregon,1,77,Male,,,2020,0
+Tennessee,1,63,Male,,,2020,75000
+Texas,1,34,Female,,,2020,15000
+Florida,1,38,Female,,,2020,27000
+Indiana,1,14,Male,,,2020,999999
+Minnesota,1,47,Male,,,2020,98000
+Georgia,1,27,Male,,,2020,44000
+Maryland,1,25,Male,,,2020,0
+Texas,1,23,Male,,,2020,25000
+California,1,36,Female,,,2020,54000
+South Carolina,1,5,Male,,,2020,999999
+Florida,1,53,Male,,,2020,60000
+Minnesota,1,12,Female,,,2020,999999
+Washington,1,40,Male,,,2020,100000
+Washington,1,34,Male,,,2020,85000
+California,1,65,Male,,,2020,20000
+Hawaii,1,61,Female,,,2020,72000
+California,1,5,Female,,,2020,999999
+California,1,48,Female,,,2020,104000
+Arkansas,1,0,Male,,,2020,999999
+Washington,1,69,Female,,,2020,0
+Michigan,1,71,Male,,,2020,0
+New Jersey,1,19,Male,,,2020,0
+Louisiana,1,14,Female,,,2020,999999
+Maryland,1,66,Male,,,2020,0
+Massachusetts,1,0,Female,,,2020,999999
+Pennsylvania,1,46,Female,,,2020,40000
+South Carolina,1,57,Female,,,2020,31000
+California,1,30,Male,,,2020,158000
+Hawaii,1,49,Male,,,2020,45000
+California,1,34,Female,,,2020,130000
+New Mexico,1,82,Male,,,2020,0
+New York,1,47,Female,,,2020,0
+California,1,45,Male,,,2020,600
+California,1,68,Male,,,2020,0
+North Dakota,1,5,Male,,,2020,999999
+Oregon,1,2,Female,,,2020,999999
+Washington,1,2,Male,,,2020,999999
+New Mexico,1,5,Male,,,2020,999999
+Nevada,1,42,Male,,,2020,80000
+Virginia,1,32,Female,,,2020,30000
+California,1,64,Male,,,2020,0
+Pennsylvania,1,87,Female,,,2020,0
+West Virginia,1,42,Female,,,2020,1500
+Texas,1,30,Male,,,2020,0
+Texas,1,73,Female,,,2020,0
+Louisiana,1,69,Female,,,2020,0
+Indiana,1,63,Male,,,2020,0
+Alabama,1,0,Male,,,2020,999999
+Pennsylvania,1,40,Female,,,2020,41600
+Virginia,1,25,Female,,,2020,30000
+New Jersey,1,40,Female,,,2020,52000
+California,1,38,Female,,,2020,0
+Arizona,1,17,Male,,,2020,12200
+Massachusetts,1,3,Male,,,2020,999999
+Wyoming,1,57,Female,,,2020,48000
+Texas,1,44,Female,,,2020,45000
+California,1,40,Male,,,2020,36000
+Washington,1,50,Male,,,2020,554000
+Texas,1,39,Male,,,2020,100000
+Texas,1,69,Male,,,2020,44000
+Pennsylvania,1,75,Female,,,2020,0
+North Carolina,1,40,Female,,,2020,14000
+Virginia,1,64,Female,,,2020,0
+Oregon,1,62,Female,,,2020,66000
+Iowa,1,11,Male,,,2020,999999
+Georgia,1,57,Male,,,2020,62000
+South Carolina,1,42,Female,,,2020,70000
+Oklahoma,1,56,Female,,,2020,21600
+Wisconsin,1,28,Male,,,2020,0
+Massachusetts,1,33,Male,,,2020,0
+Kentucky,1,27,Female,,,2020,115000
+Missouri,1,45,Male,,,2020,105000
+Pennsylvania,1,73,Male,,,2020,0
+Illinois,1,5,Female,,,2020,999999
+Hawaii,1,66,Male,,,2020,80000
+New Jersey,1,8,Male,,,2020,999999
+Kansas,1,15,Female,,,2020,999999
+Pennsylvania,1,22,Female,,,2020,5000
+New Jersey,1,25,Male,,,2020,38000
+Illinois,1,25,Male,,,2020,0
+California,1,36,Male,,,2020,65000
+New York,1,31,Female,,,2020,0
+Kentucky,1,56,Female,,,2020,35600
+California,1,3,Male,,,2020,999999
+California,1,26,Female,,,2020,21000
+Ohio,1,78,Male,,,2020,0
+California,1,64,Female,,,2020,0
+Texas,1,75,Female,,,2020,0
+Minnesota,1,16,Female,,,2020,9800
+Utah,1,45,Male,,,2020,49500
+North Carolina,1,6,Female,,,2020,999999
+Texas,1,14,Male,,,2020,999999
+California,1,19,Male,,,2020,6100
+Michigan,1,46,Male,,,2020,50000
+Arizona,1,23,Female,,,2020,0
+Massachusetts,1,11,Female,,,2020,999999
+Georgia,1,37,Male,,,2020,150000
+Tennessee,1,10,Female,,,2020,999999
+Texas,1,61,Female,,,2020,67000
+Louisiana,1,45,Male,,,2020,0
+Tennessee,1,24,Male,,,2020,40000
+Minnesota,1,12,Male,,,2020,999999
+North Carolina,1,66,Female,,,2020,0
+Connecticut,1,40,Male,,,2020,195000
+Texas,1,12,Male,,,2020,999999
+Texas,1,70,Male,,,2020,0
+South Carolina,1,31,Female,,,2020,13000
+Georgia,1,13,Female,,,2020,999999
+Missouri,1,53,Male,,,2020,50000
+Maryland,1,0,Male,,,2020,999999
+Virginia,1,55,Female,,,2020,0
+Oklahoma,1,34,Male,,,2020,29900
+Indiana,1,3,Male,,,2020,999999
+Montana,1,47,Male,,,2020,80000
+New York,1,21,Male,,,2020,0
+Florida,1,36,Male,,,2020,800
+Nevada,1,1,Male,,,2020,999999
+Colorado,1,86,Male,,,2020,0
+Alabama,1,5,Female,,,2020,999999
+Georgia,1,0,Male,,,2020,999999
+New York,1,85,Male,,,2020,0
+Texas,1,73,Male,,,2020,1000
+South Carolina,1,84,Female,,,2020,0
+California,1,46,Female,,,2020,8400
+California,1,57,Male,,,2020,2000
+Louisiana,1,51,Male,,,2020,0
+New Hampshire,1,32,Female,,,2020,0
+Maryland,1,68,Male,,,2020,0
+California,1,71,Male,,,2020,0
+Wisconsin,1,50,Female,,,2020,110000
+Arizona,1,47,Female,,,2020,24000
+Missouri,1,37,Female,,,2020,0
+California,1,46,Male,,,2020,26000
+Missouri,1,46,Female,,,2020,67000
+Oregon,1,0,Male,,,2020,999999
+Washington,1,23,Male,,,2020,44400
+Florida,1,35,Female,,,2020,12300
+Iowa,1,17,Male,,,2020,5000
+Maryland,1,45,Male,,,2020,587000
+Missouri,1,77,Female,,,2020,0
+Colorado,1,28,Male,,,2020,44000
+North Carolina,1,71,Female,,,2020,0
+Texas,1,51,Female,,,2020,0
+Connecticut,1,49,Male,,,2020,743000
+Illinois,1,3,Male,,,2020,999999
+California,1,3,Male,,,2020,999999
+Georgia,1,27,Female,,,2020,70000
+Texas,1,18,Female,,,2020,7500
+California,1,1,Female,,,2020,999999
+Virginia,1,45,Female,,,2020,60000
+Wisconsin,1,83,Male,,,2020,100000
+California,1,17,Male,,,2020,0
+Texas,1,4,Male,,,2020,999999
+Connecticut,1,5,Male,,,2020,999999
+Florida,1,3,Female,,,2020,999999
+California,1,70,Male,,,2020,0
+Virginia,1,9,Male,,,2020,999999
+Virginia,1,6,Male,,,2020,999999
+California,1,36,Female,,,2020,0
+Virginia,1,12,Female,,,2020,999999
+Illinois,1,52,Male,,,2020,40000
+Texas,1,40,Male,,,2020,30000
+California,1,26,Male,,,2020,33000
+Florida,1,48,Female,,,2020,35000
+South Carolina,1,86,Female,,,2020,0
+Oklahoma,1,7,Male,,,2020,999999
+Illinois,1,83,Male,,,2020,0
+California,1,55,Female,,,2020,13000
+Michigan,1,36,Female,,,2020,0
+Texas,1,3,Male,,,2020,999999
+Oregon,1,36,Female,,,2020,0
+New York,1,40,Female,,,2020,20300
+California,1,7,Female,,,2020,999999
+Arizona,1,42,Female,,,2020,75000
+Alabama,1,2,Male,,,2020,999999
+New York,1,44,Male,,,2020,106000
+Pennsylvania,1,64,Female,,,2020,11100
+Washington,1,67,Male,,,2020,19000
+Texas,1,51,Male,,,2020,228000
+California,1,44,Male,,,2020,40000
+California,1,50,Male,,,2020,102000
+New Jersey,1,61,Female,,,2020,100000
+Montana,1,45,Male,,,2020,3200
+Florida,1,8,Female,,,2020,999999
+Illinois,1,16,Male,,,2020,0
+New York,1,2,Male,,,2020,999999
+California,1,19,Female,,,2020,12000
+New York,1,9,Female,,,2020,999999
+Florida,1,25,Female,,,2020,0
+New Jersey,1,2,Male,,,2020,999999
+Michigan,1,49,Male,,,2020,0
+California,1,67,Female,,,2020,0
+Florida,1,53,Male,,,2020,0
+Florida,1,7,Male,,,2020,999999
+Arizona,1,29,Female,,,2020,31000
+Pennsylvania,1,40,Female,,,2020,1600
+Illinois,1,10,Female,,,2020,999999
+Wisconsin,1,41,Male,,,2020,20000
+Texas,1,41,Male,,,2020,200000
+Ohio,1,40,Male,,,2020,50000
+Montana,1,17,Male,,,2020,0
+Delaware,1,34,Female,,,2020,40000
+Tennessee,1,5,Female,,,2020,999999
+Colorado,1,22,Male,,,2020,19000
+Michigan,1,64,Female,,,2020,0
+Indiana,1,19,Female,,,2020,0
+Arkansas,1,7,Male,,,2020,999999
+California,1,6,Male,,,2020,999999
+California,1,40,Female,,,2020,85000
+California,1,34,Male,,,2020,55000
+New York,1,17,Male,,,2020,0
+New York,1,21,Male,,,2020,0
+North Carolina,1,45,Female,,,2020,0
+Delaware,1,6,Female,,,2020,999999
+Ohio,1,53,Male,,,2020,0
+Texas,1,18,Female,,,2020,24000
+Georgia,1,21,Female,,,2020,4000
+Delaware,1,46,Male,,,2020,404000
+Texas,1,53,Male,,,2020,0
+Colorado,1,37,Male,,,2020,46000
+Texas,1,43,Female,,,2020,55000
+North Carolina,1,42,Male,,,2020,76000
+California,1,59,Female,,,2020,700
+California,1,31,Female,,,2020,2000
+Mississippi,1,64,Male,,,2020,0
+California,1,4,Female,,,2020,999999
+South Carolina,1,47,Female,,,2020,0
+Ohio,1,63,Male,,,2020,0
+Indiana,1,22,Female,,,2020,23000
+Virginia,1,31,Male,,,2020,36000
+Oregon,1,8,Male,,,2020,999999
+Florida,1,15,Female,,,2020,999999
+Maryland,1,25,Male,,,2020,40000
+Ohio,1,37,Male,,,2020,120000
+Texas,1,34,Male,,,2020,50000
+California,1,22,Male,,,2020,0
+Pennsylvania,1,21,Male,,,2020,52000
+Washington,1,49,Male,,,2020,142000
+Texas,1,16,Female,,,2020,0
+Mississippi,1,19,Female,,,2020,4000
+Illinois,1,29,Male,,,2020,24000
+Virginia,1,6,Female,,,2020,999999
+Florida,1,31,Female,,,2020,25000
+California,1,84,Female,,,2020,0
+South Carolina,1,27,Female,,,2020,56000
+Michigan,1,69,Female,,,2020,16200
+Tennessee,1,68,Female,,,2020,0
+Oklahoma,1,56,Female,,,2020,0
+Florida,1,67,Male,,,2020,63000
+Kentucky,1,78,Female,,,2020,0
+Pennsylvania,1,80,Female,,,2020,0
+Pennsylvania,1,71,Male,,,2020,0
+Colorado,1,64,Female,,,2020,59000
+South Carolina,1,5,Male,,,2020,999999
+North Carolina,1,74,Male,,,2020,0
+South Carolina,1,33,Female,,,2020,14900
+South Carolina,1,31,Male,,,2020,35000
+Texas,1,61,Male,,,2020,42000
+Missouri,1,69,Female,,,2020,0
+Texas,1,33,Female,,,2020,60000
+New Jersey,1,77,Male,,,2020,15000
+North Carolina,1,35,Male,,,2020,46600
+New Mexico,1,58,Female,,,2020,36000
+Wisconsin,1,23,Male,,,2020,75000
+Florida,1,60,Female,,,2020,0
+Iowa,1,20,Female,,,2020,0
+Virginia,1,66,Female,,,2020,0
+North Carolina,1,5,Female,,,2020,999999
+District of Columbia,1,2,Female,,,2020,999999
+Utah,1,42,Female,,,2020,0
+Ohio,1,64,Male,,,2020,0
+Pennsylvania,1,35,Female,,,2020,28000
+Colorado,1,0,Male,,,2020,999999
+Colorado,1,41,Male,,,2020,50000
+Minnesota,1,36,Female,,,2020,600
+Tennessee,1,13,Female,,,2020,999999
+Illinois,1,62,Male,,,2020,15000
+Arizona,1,42,Female,,,2020,100000
+Maryland,1,79,Female,,,2020,0
+Iowa,1,61,Female,,,2020,40000
+Florida,1,31,Male,,,2020,0
+Minnesota,1,64,Female,,,2020,17600
+Georgia,1,28,Female,,,2020,8500
+Tennessee,1,29,Male,,,2020,60000
+California,1,39,Male,,,2020,70000
+Maryland,1,16,Male,,,2020,0
+New York,1,13,Male,,,2020,999999
+Hawaii,1,2,Male,,,2020,999999
+Illinois,1,1,Female,,,2020,999999
+Arizona,1,81,Male,,,2020,0
+Illinois,1,29,Male,,,2020,75000
+Maryland,1,38,Male,,,2020,29500
+Missouri,1,47,Female,,,2020,28000
+Texas,1,88,Male,,,2020,0
+Alabama,1,33,Male,,,2020,42000
+Arkansas,1,15,Female,,,2020,999999
+Florida,1,64,Female,,,2020,0
+Oklahoma,1,72,Male,,,2020,0
+California,1,9,Male,,,2020,999999
+Oklahoma,1,73,Female,,,2020,0
+Florida,1,6,Female,,,2020,999999
+Texas,1,47,Male,,,2020,70000
+Florida,1,22,Female,,,2020,45000
+Alabama,1,26,Female,,,2020,25600
+Texas,1,24,Male,,,2020,7000
+Washington,1,17,Male,,,2020,500
+New Jersey,1,30,Male,,,2020,90000
+Utah,1,4,Male,,,2020,999999
+Florida,1,50,Male,,,2020,0
+New Mexico,1,37,Male,,,2020,114000
+California,1,49,Male,,,2020,27000
+Montana,1,5,Male,,,2020,999999
+New Jersey,1,12,Male,,,2020,999999
+Colorado,1,60,Male,,,2020,30000
+Pennsylvania,1,62,Male,,,2020,25000
+Arizona,1,56,Female,,,2020,12500
+Texas,1,57,Male,,,2020,0
+Florida,1,23,Female,,,2020,67000
+Virginia,1,6,Female,,,2020,999999
+Ohio,1,66,Male,,,2020,0
+Pennsylvania,1,40,Female,,,2020,130000
+California,1,41,Male,,,2020,240000
+Pennsylvania,1,52,Female,,,2020,52000
+New York,1,41,Female,,,2020,68000
+California,1,79,Male,,,2020,0
+North Carolina,1,18,Female,,,2020,2100
+Texas,1,49,Male,,,2020,48000
+Georgia,1,8,Female,,,2020,999999
+Oklahoma,1,11,Male,,,2020,999999
+North Carolina,1,27,Male,,,2020,0
+New York,1,27,Male,,,2020,25000
+Georgia,1,27,Male,,,2020,150000
+Michigan,1,56,Female,,,2020,69000
+Virginia,1,8,Female,,,2020,999999
+Ohio,1,60,Female,,,2020,0
+North Carolina,1,62,Male,,,2020,62000
+New York,1,29,Male,,,2020,11200
+North Carolina,1,64,Female,,,2020,0
+Kansas,1,79,Male,,,2020,4000
+Kansas,1,50,Male,,,2020,17000
+Washington,1,33,Male,,,2020,0
+North Carolina,1,12,Male,,,2020,999999
+Texas,1,59,Female,,,2020,0
+California,1,34,Male,,,2020,170000
+North Carolina,1,71,Female,,,2020,0
+Utah,1,6,Female,,,2020,999999
+Pennsylvania,1,9,Male,,,2020,999999
+South Carolina,1,20,Male,,,2020,0
+Wisconsin,1,7,Female,,,2020,999999
+Indiana,1,37,Male,,,2020,30000
+Tennessee,1,72,Female,,,2020,0
+Florida,1,41,Male,,,2020,78000
+Georgia,1,35,Female,,,2020,78000
+Arizona,1,55,Female,,,2020,1200
+Colorado,1,37,Male,,,2020,25000
+Missouri,1,23,Female,,,2020,7200
+Louisiana,1,9,Male,,,2020,999999
+Wisconsin,1,79,Female,,,2020,0
+Hawaii,1,29,Male,,,2020,60000
+Kentucky,1,86,Male,,,2020,0
+Ohio,1,37,Male,,,2020,130000
+Texas,1,49,Male,,,2020,0
+District of Columbia,1,61,Male,,,2020,14000
+Michigan,1,41,Male,,,2020,54000
+Alaska,1,6,Male,,,2020,999999
+California,1,35,Female,,,2020,40000
+California,1,28,Male,,,2020,0
+Florida,1,90,Male,,,2020,0
+Washington,1,56,Male,,,2020,0
+Kentucky,1,60,Female,,,2020,14000
+Minnesota,1,5,Female,,,2020,999999
+West Virginia,1,31,Male,,,2020,30000
+New York,1,19,Male,,,2020,4000
+Tennessee,1,75,Female,,,2020,13000
+South Carolina,1,14,Female,,,2020,999999
+Ohio,1,45,Female,,,2020,0
+Connecticut,1,46,Female,,,2020,0
+Illinois,1,75,Female,,,2020,45000
+Texas,1,37,Female,,,2020,30000
+California,1,45,Male,,,2020,565000
+North Carolina,1,37,Male,,,2020,65000
+New York,1,32,Male,,,2020,101000
+Texas,1,41,Female,,,2020,60000
+North Carolina,1,5,Female,,,2020,999999
+Maryland,1,40,Female,,,2020,0
+Texas,1,6,Male,,,2020,999999
+Texas,1,0,Male,,,2020,999999
+Pennsylvania,1,16,Female,,,2020,0
+New York,1,38,Female,,,2020,32000
+New York,1,18,Female,,,2020,0
+Arizona,1,64,Male,,,2020,0
+Virginia,1,51,Male,,,2020,65000
+Arizona,1,61,Female,,,2020,0
+Nevada,1,83,Female,,,2020,0
+Florida,1,52,Male,,,2020,50000
+North Carolina,1,81,Female,,,2020,0
+Michigan,1,36,Male,,,2020,0
+Vermont,1,79,Male,,,2020,0
+Maryland,1,56,Female,,,2020,13000
+Mississippi,1,74,Male,,,2020,0
+New York,1,24,Female,,,2020,26000
+Connecticut,1,74,Female,,,2020,0
+Pennsylvania,1,48,Male,,,2020,18200
+New York,1,60,Female,,,2020,48000
+Arkansas,1,47,Male,,,2020,56000
+Louisiana,1,69,Female,,,2020,0
+Massachusetts,1,80,Female,,,2020,0
+Texas,1,64,Female,,,2020,0
+Illinois,1,23,Male,,,2020,50000
+Michigan,1,71,Female,,,2020,0
+Virginia,1,16,Male,,,2020,1000
+Illinois,1,37,Female,,,2020,0
+New Jersey,1,86,Female,,,2020,0
+Massachusetts,1,70,Male,,,2020,0
+Texas,1,14,Female,,,2020,999999
+Connecticut,1,68,Female,,,2020,8000
+Indiana,1,31,Female,,,2020,10000
+Washington,1,35,Female,,,2020,0
+North Carolina,1,37,Female,,,2020,436000
+Texas,1,92,Female,,,2020,0
+New Mexico,1,59,Male,,,2020,0
+Virginia,1,34,Male,,,2020,150000
+Ohio,1,74,Female,,,2020,0
+Missouri,1,23,Female,,,2020,0
+Illinois,1,64,Male,,,2020,0
+Tennessee,1,51,Female,,,2020,20000
+Ohio,1,51,Female,,,2020,0
+Virginia,1,13,Male,,,2020,999999
+California,1,37,Female,,,2020,65000
+Ohio,1,41,Male,,,2020,47000
+Minnesota,1,27,Male,,,2020,42000
+New Jersey,1,19,Female,,,2020,8000
+Texas,1,32,Female,,,2020,0
+New York,1,90,Female,,,2020,0
+Illinois,1,26,Male,,,2020,45000
+Virginia,1,51,Male,,,2020,0
+California,1,53,Female,,,2020,74000
+Maryland,1,33,Male,,,2020,90000
+Maryland,1,47,Female,,,2020,25700
+New York,1,1,Male,,,2020,999999
+West Virginia,1,79,Female,,,2020,0
+Texas,1,53,Male,,,2020,0
+Oregon,1,60,Female,,,2020,28800
+Michigan,1,60,Female,,,2020,0
+Alabama,1,54,Female,,,2020,0
+Florida,1,9,Female,,,2020,999999
+Colorado,1,34,Female,,,2020,15000
+New Jersey,1,42,Female,,,2020,75000
+Florida,1,68,Male,,,2020,0
+California,1,33,Female,,,2020,80000
+Texas,1,7,Female,,,2020,999999
+North Carolina,1,6,Female,,,2020,999999
+Maryland,1,55,Female,,,2020,50000
+Wisconsin,1,19,Male,,,2020,6000
+North Carolina,1,30,Female,,,2020,60000
+New York,1,58,Female,,,2020,92000
+New Jersey,1,11,Female,,,2020,999999
+California,1,80,Female,,,2020,0
+New Mexico,1,41,Male,,,2020,96000
+California,1,54,Male,,,2020,110000
+New York,1,58,Female,,,2020,100000
+New York,1,23,Female,,,2020,10800
+Michigan,1,38,Female,,,2020,95000
+Arkansas,1,8,Female,,,2020,999999
+Georgia,1,0,Male,,,2020,999999
+Utah,1,59,Female,,,2020,12000
+New Hampshire,1,58,Male,,,2020,45000
+Oregon,1,68,Male,,,2020,34800
+Louisiana,1,51,Female,,,2020,72000
+Florida,1,59,Male,,,2020,90000
+Michigan,1,78,Female,,,2020,0
+California,1,60,Male,,,2020,60000
+Florida,1,30,Female,,,2020,0
+Pennsylvania,1,44,Male,,,2020,200000
+Tennessee,1,53,Male,,,2020,0
+New Jersey,1,33,Male,,,2020,54000
+Missouri,1,62,Female,,,2020,15000
+Arkansas,1,53,Female,,,2020,12000
+Washington,1,56,Female,,,2020,16000
+California,1,23,Male,,,2020,30000
+Pennsylvania,1,10,Male,,,2020,999999
+New York,1,13,Female,,,2020,999999
+Minnesota,1,60,Female,,,2020,124000
+Florida,1,35,Female,,,2020,32000
+Louisiana,1,17,Female,,,2020,0
+Kentucky,1,77,Male,,,2020,0
+Michigan,1,53,Male,,,2020,33000
+Washington,1,80,Male,,,2020,0
+Washington,1,19,Female,,,2020,0
+Washington,1,49,Male,,,2020,554000
+North Carolina,1,94,Female,,,2020,0
+Arizona,1,42,Female,,,2020,24000
+Massachusetts,1,21,Male,,,2020,17000
+Missouri,1,63,Female,,,2020,0
+Washington,1,25,Female,,,2020,19300
+Kansas,1,32,Male,,,2020,25000
+Texas,1,39,Male,,,2020,0
+Georgia,1,78,Female,,,2020,0
+Virginia,1,86,Female,,,2020,0
+North Carolina,1,17,Male,,,2020,2500
+Illinois,1,78,Female,,,2020,0
+Utah,1,20,Female,,,2020,0
+California,1,22,Female,,,2020,0
+California,1,61,Male,,,2020,56000
+Florida,1,22,Male,,,2020,12000
+Nevada,1,30,Female,,,2020,40000
+Montana,1,39,Female,,,2020,55000
+Washington,1,20,Male,,,2020,39500
+Massachusetts,1,8,Female,,,2020,999999
+Delaware,1,41,Male,,,2020,64000
+Florida,1,55,Male,,,2020,205000
+Wisconsin,1,49,Male,,,2020,36000
+Florida,1,15,Female,,,2020,999999
+California,1,9,Female,,,2020,999999
+New York,1,48,Male,,,2020,70000
+Florida,1,85,Male,,,2020,12000
+New Jersey,1,57,Male,,,2020,45000
+California,1,49,Male,,,2020,115000
+California,1,18,Male,,,2020,10000
+Nebraska,1,33,Female,,,2020,0
+Pennsylvania,1,39,Male,,,2020,95000
+Nevada,1,1,Male,,,2020,999999
+Ohio,1,83,Female,,,2020,20000
+Pennsylvania,1,20,Female,,,2020,5500
+California,1,23,Male,,,2020,40000
+Pennsylvania,1,21,Female,,,2020,9500
+Pennsylvania,1,2,Female,,,2020,999999
+Georgia,1,72,Male,,,2020,0
+New Jersey,1,79,Male,,,2020,0
+Ohio,1,0,Male,,,2020,999999
+Oklahoma,1,1,Male,,,2020,999999
+Indiana,1,13,Female,,,2020,999999
+Georgia,1,22,Male,,,2020,60000
+Oregon,1,10,Male,,,2020,999999
+Florida,1,13,Female,,,2020,999999
+Texas,1,42,Male,,,2020,0
+Wisconsin,1,44,Male,,,2020,0
+Missouri,1,53,Male,,,2020,36800
+Tennessee,1,49,Female,,,2020,0
+Indiana,1,66,Female,,,2020,40500
+Massachusetts,1,76,Female,,,2020,0
+Wisconsin,1,38,Female,,,2020,20000
+New York,1,66,Male,,,2020,0
+Illinois,1,21,Female,,,2020,17000
+California,1,37,Female,,,2020,70000
+Tennessee,1,47,Male,,,2020,98000
+Minnesota,1,21,Female,,,2020,18000
+Florida,1,35,Male,,,2020,5000
+Florida,1,5,Female,,,2020,999999
+South Carolina,1,6,Female,,,2020,999999
+Maine,1,57,Male,,,2020,120000
+Minnesota,1,54,Female,,,2020,60000
+California,1,40,Female,,,2020,66000
+Pennsylvania,1,43,Female,,,2020,49000
+Florida,1,50,Male,,,2020,173000
+Washington,1,78,Male,,,2020,0
+Massachusetts,1,54,Male,,,2020,90000
+Louisiana,1,19,Female,,,2020,0
+Idaho,1,33,Female,,,2020,90000
+Massachusetts,1,37,Female,,,2020,0
+California,1,23,Female,,,2020,2000
+California,1,12,Female,,,2020,999999
+California,1,34,Female,,,2020,72000
+New Mexico,1,72,Male,,,2020,0
+Florida,1,8,Male,,,2020,999999
+Maryland,1,49,Male,,,2020,175000
+Maryland,1,43,Male,,,2020,213000
+Colorado,1,32,Female,,,2020,0
+Louisiana,1,79,Female,,,2020,0
+Pennsylvania,1,78,Female,,,2020,0
+Georgia,1,68,Male,,,2020,0
+Missouri,1,40,Female,,,2020,38000
+Arizona,1,86,Female,,,2020,0
+California,1,32,Male,,,2020,20000
+Georgia,1,9,Female,,,2020,999999
+South Carolina,1,29,Male,,,2020,0
+Colorado,1,45,Female,,,2020,0
+California,1,29,Female,,,2020,1300
+New Mexico,1,14,Female,,,2020,999999
+Georgia,1,57,Male,,,2020,0
+Colorado,1,35,Male,,,2020,110000
+Louisiana,1,69,Male,,,2020,0
+California,1,15,Male,,,2020,999999
+Texas,1,7,Male,,,2020,999999
+Minnesota,1,71,Male,,,2020,0
+Oklahoma,1,25,Male,,,2020,27000
+South Carolina,1,34,Female,,,2020,65000
+New Jersey,1,41,Male,,,2020,71000
+Massachusetts,1,19,Female,,,2020,1000
+Connecticut,1,3,Male,,,2020,999999
+New Jersey,1,11,Male,,,2020,999999
+Massachusetts,1,61,Female,,,2020,0
+Colorado,1,29,Male,,,2020,0
+California,1,55,Female,,,2020,20000
+South Carolina,1,17,Female,,,2020,0
+Connecticut,1,55,Female,,,2020,48000
+New York,1,48,Female,,,2020,35400
+Virginia,1,84,Female,,,2020,0
+California,1,40,Female,,,2020,0
+Texas,1,24,Female,,,2020,23000
+Connecticut,1,37,Male,,,2020,80000
+New Jersey,1,91,Female,,,2020,0
+Florida,1,38,Male,,,2020,30000
+Massachusetts,1,45,Female,,,2020,8200
+California,1,32,Male,,,2020,20000
+Mississippi,1,27,Female,,,2020,61000
+Florida,1,66,Female,,,2020,0
+Michigan,1,50,Female,,,2020,12000
+Indiana,1,45,Female,,,2020,0
+Nebraska,1,20,Male,,,2020,12000
+New York,1,59,Female,,,2020,47000
+Pennsylvania,1,51,Male,,,2020,0
+Idaho,1,27,Female,,,2020,48000
+Texas,1,72,Male,,,2020,0
+Florida,1,39,Female,,,2020,8000
+Washington,1,70,Female,,,2020,0
+Washington,1,65,Male,,,2020,110000
+Texas,1,19,Female,,,2020,6000
+Nevada,1,24,Male,,,2020,5000
+Texas,1,28,Male,,,2020,70000
+Ohio,1,16,Female,,,2020,80
+Florida,1,20,Male,,,2020,0
+Missouri,1,42,Female,,,2020,57000
+Indiana,1,39,Male,,,2020,30000
+Connecticut,1,48,Male,,,2020,0
+Michigan,1,36,Male,,,2020,95000
+Florida,1,55,Male,,,2020,80000
+Texas,1,24,Male,,,2020,25000
+Colorado,1,17,Male,,,2020,0
+New York,1,74,Male,,,2020,0
+Michigan,1,24,Female,,,2020,78000
+Pennsylvania,1,45,Female,,,2020,174000
+Indiana,1,51,Male,,,2020,0
+California,1,67,Female,,,2020,0
+Massachusetts,1,53,Male,,,2020,250000
+South Carolina,1,17,Female,,,2020,0
+Wisconsin,1,76,Female,,,2020,0
+Virginia,1,37,Female,,,2020,47800
+Wisconsin,1,35,Female,,,2020,35000
+Maryland,1,80,Female,,,2020,0
+North Dakota,1,3,Female,,,2020,999999
+Georgia,1,35,Male,,,2020,0
+South Carolina,1,30,Female,,,2020,53000
+Florida,1,11,Female,,,2020,999999
+Ohio,1,31,Male,,,2020,92000
+New York,1,86,Female,,,2020,0
+Texas,1,26,Female,,,2020,39000
+California,1,37,Female,,,2020,25000
+Illinois,1,55,Female,,,2020,0
+Virginia,1,20,Female,,,2020,0
+Virginia,1,47,Female,,,2020,0
+Tennessee,1,47,Female,,,2020,15000
+Missouri,1,10,Female,,,2020,999999
+Massachusetts,1,45,Male,,,2020,156000
+Florida,1,15,Male,,,2020,999999
+New York,1,21,Female,,,2020,8300
+Florida,1,75,Male,,,2020,450
+Pennsylvania,1,11,Female,,,2020,999999
+Alabama,1,20,Female,,,2020,24000
+California,1,65,Male,,,2020,62000
+New Jersey,1,25,Female,,,2020,18000
+California,1,40,Female,,,2020,10000
+Arizona,1,61,Male,,,2020,0
+North Carolina,1,46,Female,,,2020,103000
+Michigan,1,26,Male,,,2020,55000
+Oklahoma,1,55,Female,,,2020,16000
+Massachusetts,1,57,Female,,,2020,60000
+Oklahoma,1,50,Female,,,2020,20000
+Florida,1,12,Male,,,2020,999999
+Georgia,1,17,Female,,,2020,0
+California,1,8,Male,,,2020,999999
+Hawaii,1,50,Male,,,2020,70000

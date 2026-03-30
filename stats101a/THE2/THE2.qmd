@@ -1,0 +1,179 @@
+---
+title: "Stats 101A - Take-Home Exam 2"
+author: "Avelia Mira"
+format: 
+  pdf:
+    include-in-header:
+      - text: |
+          \usepackage{fvextra}
+          \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+editor: visual
+---
+
+# Q1 Model parameters
+
+This problem uses the data set rents.csv. These provide information on the median rent for a large number of cities in the U.S. for each month from January 2024 through December 2025. In order to avoid confusion, when we say "rent" we mean the median rent. So by "the rent in Los Angeles is \$1800" we mean "the median rent in Los Angeles is \$1800". (In truth, our model will estimate the mean median rent, which is confusing and I don't want you to get tripped up over semantics.)
+
+The question we will investigate is "How well do rents in January 2024 predict rents in December 2025?"
+
+Fit a linear model that predicts rents in December 2025 based on rents in January 2024. In other words, we're using the first month of available data to predict the last month of available data.
+
+## Q1.1: Intercept
+
+**Answer: -35.76**
+
+## Q1.2: Slope
+
+**Answer: 1.03**
+
+## Q1.3: Variation (σ̂)
+
+**Answer: 80.16**
+
+## Q1.4: Code for Question 1
+
+```{r q1-code}
+rents <- read.csv("rents.csv")
+
+model <- lm(Dec_2025 ~ Jan_2024, data = rents)
+
+summary(model) # you can technically stop here, but to get the specific values
+
+intercept <- coef(model)[1] # q1.1
+slope <- coef(model)[2]  # q1.2
+sigma_hat <- summary(model)$sigma # q1.3
+
+intercept
+slope
+sigma_hat
+```
+
+# Q2 Validity
+
+Comment on the validity of the model you fit for Question 1.
+
+## Q2.1: Trend Validity
+
+**Answer:** Yes, the trend component seems to be valid. This is because the scatterplot seems to show a very strong linear relationship, and the data appears to follow the regression line very closely. Additionally, the high R^2 does add on to the idea that a linear trend may be appropriate. Though the residual plot does show minor deviations from perfect linearity, the linear model could be said to capture the trend very well. Additionally, the residual plot does not appear to show any clear trends.
+
+## Q2.2: Constant Variance (Homoskedasticity)
+
+**Answer:** No. Homoscedasticity is not satisfied because the residuals vs fitted plot shows evidence of heterocedasticity -- that the spread of the residuals increases at higher fitted values especially at the 2500-3000 range. Thus, it is not homoscedastic.
+
+## Q2.3: Code for Question 2
+
+```{r q2-code}
+# residual plot
+residuals <- resid(model)
+hist(residuals, main = "Histogram of Residuals", xlab = "Residuals")
+
+# scatter plot & regression line
+plot(rents$Jan_2024, rents$Dec_2025,
+     main = "December 2025 Rent vs January 2024 Rent", 
+     xlab = "January 2024 Rent",
+     ylab = "December 2025 Rent")
+abline(model, col = "red", lwd = 2)
+```
+
+# Q3 Stability Claim
+
+From now on, assume the model is valid.
+
+## Q3.1: Stability Claim
+
+A realtor who finds apartments to rent for clients claims that rents in January 2024 are essentially the same as in December 2025. Is this claim supported by your model? Use the model to answer "yes" or "no" and explain why you answered that way. (Use your model; not a t-test.)
+
+**Answer:** No, because a 95% confidence interval for the intercept does not contain 0 and a 95% confidence interval for slope does not contain 1. As such, the model does not support the realtor's claim and we would believe evidence of the alternative -- that rents have changed significantly between January 2024 and December 2025.
+
+## Q3.2: Code for Question 3
+
+```{r q3-code}
+ci <- confint(model, level = 0.95) # q3.1
+ci
+```
+
+# Q4 Outliers
+
+You might note that there is (at least) one extreme residual of about 400. This belongs to San Francisco.
+
+The 'location' variable tells you the name of the city. The 'metro' variable only gives the general metropolitan area in which the city is located.
+
+## Q4.1: Predict San Francisco
+
+Predict San Francisco's December 2025 rent if the rent was \$2628 in January 2024. Provide both the lower and upper bounds of the appropriate interval at a 95% level. Your answer should be in the form of an interval with upper and lower bounds given to two decimal places.
+
+**Answer: (2500.79, 2816.29)**
+
+## Q4.2: Residual Value for San Francisco
+
+What is the residual value for San Francisco according to your model? State your result to two decimal places.
+
+**Answer: 419.46**
+
+## Q4.3: Mean Median Rent
+
+The mean rent across all cities in Jan 2024 was about \$1500. According to your model, what's the rent in December 2025 for all cities that had a rent of \$1500 in January 2024? Again, provide the appropriate interval with a level of 95%. The upper and lower bounds should be stated with two decimal places.
+
+**Answer: (1497.48, 1506.69)**
+
+## Q4.4: Code for Question 4
+
+```{r q4-code}
+predict(model, newdata = data.frame(Jan_2024 = 2628), interval = "prediction", level = 0.95) # q4.1
+
+sf_data <- subset(rents, location == "San Francisco, CA")
+sf_actual <- sf_data$Dec_2025
+sf_fitted <- predict(model, newdata = sf_data)
+sf_residual <- sf_actual - sf_fitted
+sf_residual # q4.2
+
+predict(model, newdata = data.frame(Jan_2024 = 1500), interval = "confidence", level = 0.95) # q4.3
+```
+
+# Q5 Hypothesis Test
+
+Test the null hypothesis that $\beta_1 = 1.5$ with a 5% significance level.
+
+## Q5.1: t-statistic
+
+What's the value of your t-statistic? (State to two decimal places.)
+
+**Answer: -88.12**
+
+## Q5.2: p-value
+
+What's the p-value? State to two decimal places.
+
+**Answer: 0.00**
+
+## Q5.3: Decision
+
+What's your decision?
+
+**Answer:** Reject the null hypothesis, we believe there is evidence for the alternative based on the confidence level of 5%.
+
+## Q5.4: Code for Question 5
+
+```{r q5-code}
+b1_hat <- coef(model)[2]
+se_b1 <- summary(model)$coefficients[2, 2] 
+
+t_statistic <- (b1_hat - 1.5) / se_b1
+t_statistic # q5.1
+
+df_resid <- df.residual(model)
+p_value <- 2 * pt(abs(t_statistic), df = df_resid, lower.tail = FALSE)
+p_value # q5.2, 5.3
+```
+
+# Q6 Clarification
+
+If you were unable to get clarification that you needed in order to answer any questions, please explain here.
+
+**Answer: n/a**
+
+# Q7 AI Tools Used
+
+Please indicate which AI tools, if any, you used. If none, write "none" or the equivalent.
+
+**Answer:** I used R Copilot yet again because I have a headache i hate my migraines i hate my life

@@ -1,0 +1,271 @@
+---
+title: "Stats 101A - Homework 4"
+author: "Avelia Mira"
+format: 
+  pdf:
+    include-in-header:
+      - text: |
+          \usepackage{fvextra}
+          \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+editor: visual
+---
+
+## Load libraries & setup
+
+
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+# setwd("~/Downloads/stats/stats101a/HW4") 
+
+```
+
+## Question 1
+
+We are asked to explore what happens when we fit a linear model to data that doesn't actually follow a linear trend, as well as what happens when various assumptions are violated
+
+### a) Generate data with a quadratic trend and plot it
+
+For this part, we would like to write a function which creates data which follows the model $y = a + bx + cx^2 + \varepsilon$, where $\varepsilon \sim N(0, \sigma)$.
+
+Here is the plan for the code:
+
+* Define a function `simulate_quad` that takes inputs for coefficients, sigma, and a seed.
+* Calculate the deterministic trend.
+* Add random gaussian noise.
+* Use the suggested input values $(a, b, c, \sigma) = (1, 5, 3, 10)$ and create a scatter plot.
+
+I chose `seq(1, 10, .1)` because I wanted to space them from 1-10 with intervals of .1
+
+```{r}
+simulate_quad <- function(a, b, c, sigma, x=rep(seq(1,10,.1),4), random.seed){
+  set.seed(random.seed)
+   
+  trend <- a + b*x + c*(x^2)
+   
+  epsilon <- rnorm(length(x), mean = 0, sd = sigma)
+   
+  y <- trend + epsilon
+  return(y)
+}
+
+x_values <- rep(seq(1,10,.1), 4)
+
+y_values <- simulate_quad(a=1, b=5, c=3, sigma=10, x=x_values, random.seed=123)
+
+plot(x_values, y_values, 
+     main="Scatter plot of Quadratic Data", 
+     xlab="x", ylab="y", pch=19, cex=0.6)
+
+```
+
+After using the random seed of 123, the plot very much clearly shows a curved, non-linear relationship. 
+
+### b) Fit an incorrect (linear) model
+
+The next thing we want to do is fit the linear model `lm(y ~ x)` to the quadratic data to see how residuals behave. Obviously, we'll see that the residuals will have a pattern, perhaps a curved one, but for the sake of the assignment, our game plan is to:
+
+* Fit the model `model_linear`.
+* Extract the residuals.
+* Plot residuals against $x$ to look for patterns.
+
+```{r}
+model_linear <- lm(y_values ~ x_values)
+
+resids_linear <- resid(model_linear)
+
+plot(x_values, resids_linear, 
+     main="Residuals of Linear Fit on Quadratic Data", 
+     xlab="x", ylab="Residuals", pch=19, cex=0.6)
+abline(h=0, lwd=2) 
+
+```
+
+As predicted -- the residual plot clearly shows a parabolic curve rather than random points. The residuals are negative in the middle and positive towards the ends. Consider that this pattern means that the linear model failed to capture the curvature in the trend component. 
+
+### c) Fit the correct (quadratic) model
+
+Now when we fit the correct model, we'll probably expect the formula to actually show that the residuals are just random. 
+
+
+```{r}
+model_quadratic <- lm(y_values ~ x_values + I(x_values^2))
+
+resids_quad <- resid(model_quadratic)
+
+plot(x_values, resids_quad, 
+     main="Part (c): Residuals of Quadratic Fit", 
+     xlab="x", ylab="Residuals", pch=19, cex=0.6)
+abline(h=0, lwd=2)
+
+```
+
+Compared to part (b), the plot just shows random noise which are centred around the horizontal line. The squared term has fitted the correct trend (obviously) and the curvature has disappeared.
+
+### d) Non-Constant Standard Deviation
+
+Next we want to try what happens when the stochastic part is incorrect, as we wish to write a function where th standard deviation of the error term depends on $x$ (specifically, $\sigma x$).
+
+```{r}
+simulate_err <- function(a, b, x=rep(seq(1,10,.1),4), sigma, random.seed){
+  set.seed(random.seed)
+  a + b*x + rnorm(length(x), 0, sigma*x)
+}
+
+x_errors <- rep(seq(1,10,.1), 4)
+y_errors <- simulate_err(a=1, b=200, x=x_errors, sigma=100, random.seed=123)
+
+plot(x_errors, y_errors, 
+     main="Data with Non-Constant Variance", 
+     xlab="x", ylab="y", pch=19, cex=0.6)
+
+```
+
+Here, the random error terms are not identically distributed and as $x$ gets larger, the spread of the data increases, violating homoscedasticity assumption.
+
+### e) Fit linear model to non-constant variance data
+
+Next, the logical course is to fit a standard model and show how the residuals are violated visually. 
+
+```{r}
+model_hetero <- lm(y_errors ~ x_errors)
+
+plot(x_errors, resid(model_hetero), 
+     main="Residuals showing Non-Constant Variance", 
+     xlab="x", ylab="Residuals", pch=19, cex=0.6)
+abline(h=0, lwd=2)
+
+```
+
+For this we can see the residual plot has a funnel shape and the residuals are clustered towards zero and spread out as $x$ increases. This further proves a violation of the homoscedasticity assumption.
+
+---
+
+## Question 2
+
+For this question, we're using the `atus.csv` dataset to examine the relationship between sleep and homework.
+
+We want to load and filter the data to exclude individuals who did zero homework.
+
+```{r}
+#| message: false
+atus <- read_csv("atus.csv")
+
+atus_filtered <- filter(atus, homework > 0)
+
+```
+
+### a) Make a scatterplot
+
+Here, we can plot the scatterplot to be able to visualise the relationship with homework on the y-axis. 
+
+```{r}
+plot(atus_filtered$sleep, atus_filtered$homework,
+     main = "Time Spent on Homework vs. Sleeping",
+     xlab = "Time Spent Sleeping (minutes)",
+     ylab = "Time Spent on Homework (minutes)",
+     pch = 19, cex = 0.6)
+
+```
+
+It does seem like there's a blob, so honestly linearity is probably questionable, but as the question wishes and desires, we will proceed with the model. 
+
+### b) Fit a linear model
+
+I will use `lm()` to estimate the parameters.
+
+```{r}
+model_atus <- lm(homework ~ sleep, data = atus_filtered)
+summary(model_atus)
+
+```
+
+The estimated intercept is **249.76** minutes. Our estimated intercept means that we believe that if someone slept for 0 minutes, we expect them to have studied for 249.76 minutes on average. 
+The estimated slope is **-0.1312**. Our estimated slope means that we expect that for every additional minute of sleep, homework time decreases by about 0.13 minutes on average. 
+The p-value (**0.00498**) indicates this relationship is statistically significant at the 0.05 level.
+When we convert to the per hour, we can interpret it as for every additional hour of sleep, we expect approximately -7.87 minutes of homework on average.
+
+### c) Residual Plot
+
+I'll check the residuals to assess the model fit.
+
+```{r}
+atus_residuals <- resid(model_atus)
+
+plot(atus_filtered$sleep, atus_residuals,
+     main = "Residuals vs. Time Spent Sleeping",
+     xlab = "Time Spent Sleeping",
+     ylab = "Residuals")
+abline(h = 0, lwd = 2)
+
+```
+
+Our residual plot shows points centred around zero which does suggest linearity to be reasonable. However, though there is a dense cluster of points between the 400-600 minute mark (which does reflect typical sleep durations), the vertical spread of residuals does seem to be consistent across this range. Consider that there are some positive outliers, or large residuals above 400, which does suggest that some individuals do more homework than the model predicts. However, no clear non-linear pattern is evident. 
+
+---
+
+## Question 3
+
+For this, we bring out the "Playbill" data loaded on, and fitted where `CurrentWeek` is the response and `LastWeek` is the predictor.
+
+```{r}
+#| message: false
+playbill <- read_csv("playbill.csv")
+
+model_playbill <- lm(CurrentWeek ~ LastWeek, data = playbill)
+summary(model_playbill)
+
+```
+
+### a) Confidence Interval for the slope
+
+We want to get a need a 95% confidence interval for the slope. We will use the `confint()` function.
+
+```{r}
+confint(model_playbill, level = 0.95)
+```
+
+Our 95% confidence interval for the `LastWeek` slope is approximately **[0.9515, 1.0127]**. Because the value of **1.0** falls *within* this interval, it is a plausible value for the slope. This suggests that it is reasonable that next week’s gross is approximately equal to last week’s gross slope = 1 is consistent with the data.
+
+### b) Hypothesis Test for the Intercept
+
+We want to test if the intercept is equal to 10,000.
+The standard summary only tests if it equals 0, so I have to calculate the t-statistic manually. As such, the plan is as follows:
+
+1. Extract the coefficient and its standard error.
+2. Calculate the t-statistic.
+3. Calculate the p-value using the `pt()` function.
+
+```{r}
+beta0_estimator <- coef(model_playbill)["(Intercept)"]
+se_beta0 <- summary(model_playbill)$coefficients[1, 2] # Row 1 is Intercept
+
+null_value <- 10000
+t_statistic <- (beta0_estimator - null_value) / se_beta0
+
+df_residual <- df.residual(model_playbill)
+p_value <- 2 * pt(abs(t_statistic), df = df_residual, lower.tail = FALSE)
+
+cat(sprintf("t-statistic: %.4f\n", t_statistic))
+cat(sprintf("p-value: %.4f\n", p_value))
+
+```
+
+Our t-statistic is **-0.3218** with a p-value of **0.7518**. Because the p-value (0.7518) is much greater than 0.05, we **fail to reject** the null hypothesis. We do not believe that there is evidence to conclude that the true intercept is different from $10,000.
+
+### c) Prediction Interval
+
+We would like to predict the gross box office for a production that earned $400,000 last week. Since we are predicting a specific value rather than an average, we must use the `interval = "prediction"` on the predict() function.
+
+```{r}
+new_show <- data.frame(LastWeek = 400000)
+
+predict(model_playbill, newdata = new_show, interval = "prediction", level = 0.95)
+
+```
+
+The 95% prediction interval is approximately **[$359,833, $439,442]**. We are 95% confident that a specific show earning $400,000 last week will have a current week gross between $359,833 and $439,442. The fitted value is $399,637.50.
+
+
+
