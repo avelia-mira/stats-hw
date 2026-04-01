@@ -1,0 +1,454 @@
+---
+title: "Stats 102B - Homework 1"
+author: "Avelia Mira (806164091)"
+subtitle: "George Michailidis"
+date: "Due electronically through BruinLearn on April 10 at 11 pm"
+format:
+  pdf:
+    include-in-header:
+      - text: |
+          \usepackage{fvextra}
+          \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+editor: visual
+---
+
+## Setup
+
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+```
+
+## Problem 1
+
+Consider the function $f : \mathbb{R} \to \mathbb{R}$ with
+
+$$
+f(x) = x^4 + 2x^2 + 1
+$$
+
+### Part (a): Theoretical minimum
+
+Find the theoretical minimum of $f(x)$ analytically. Show your work, and explicitly justify why this critical point is a minimum (rather than a maximum or an inflection point).
+
+**Work:**
+
+$$
+f'(x) = 4x^3 + 4x = 4x(x^2 + 1)
+$$
+
+Since $x^2 + 1 > 0$ for all $x \in \mathbb{R}$, the only real critical point is:
+
+$$
+x = 0
+$$
+
+Second derivative:
+
+$$
+f''(x) = 12x^2 + 4
+$$
+
+At $x=0$, $f''(0)=4>0$, so $x=0$ is a strict local minimum. Because $f(x)=x^4+2x^2+1=(x^2+1)^2 \ge 1$, this is also the global minimum.
+
+```{r}
+# Verify value at minimizer
+f <- function(x) x^4 + 2*x^2 + 1
+x_star_theory <- 0
+f(x_star_theory)
+```
+
+### Part (b): Numerical minimum via gradient descent
+
+Use gradient descent to calculate the numerical minimum $\hat{x}_{\min}$ with:
+
+1. Constant step size
+2. Backtracking line search (Armijo condition)
+
+Run both methods from two starting points: $x_0=2$ and $x_0=5$.
+
+#### Helper functions
+
+```{r}
+f <- function(x) x^4 + 2*x^2 + 1
+grad_f <- function(x) 4*x^3 + 4*x
+```
+
+#### Constant step size GD
+
+```{r}
+gd_constant <- function(x0, eta, tol = 1e-8, max_iter = 20000) {
+  x <- x0
+  x_hist <- numeric(max_iter + 1)
+  f_hist <- numeric(max_iter + 1)
+
+  x_hist[1] <- x
+  f_hist[1] <- f(x)
+
+  k <- 0
+  repeat {
+    g <- grad_f(x)
+    if (abs(g) < tol || k >= max_iter) break
+
+    x <- x - eta * g
+    k <- k + 1
+
+    x_hist[k + 1] <- x
+    f_hist[k + 1] <- f(x)
+  }
+
+  list(
+    x_hat = x,
+    iter = k,
+    x_hist = x_hist[1:(k + 1)],
+    f_hist = f_hist[1:(k + 1)]
+  )
+}
+```
+
+#### Backtracking (Armijo) GD
+
+```{r}
+gd_backtracking <- function(
+  x0,
+  eta0 = 1,
+  alpha = 1e-4,
+  beta = 0.5,
+  tol = 1e-8,
+  max_iter = 20000
+) {
+  x <- x0
+
+  x_hist <- numeric(max_iter + 1)
+  f_hist <- numeric(max_iter + 1)
+  eta_hist <- numeric(max_iter)
+
+  x_hist[1] <- x
+  f_hist[1] <- f(x)
+
+  k <- 0
+  repeat {
+    g <- grad_f(x)
+    if (abs(g) < tol || k >= max_iter) break
+
+    eta <- eta0
+    while (f(x - eta * g) > f(x) - alpha * eta * g^2) {
+      eta <- beta * eta
+    }
+
+    x <- x - eta * g
+    k <- k + 1
+
+    x_hist[k + 1] <- x
+    f_hist[k + 1] <- f(x)
+    eta_hist[k] <- eta
+  }
+
+  list(
+    x_hat = x,
+    iter = k,
+    x_hist = x_hist[1:(k + 1)],
+    f_hist = f_hist[1:(k + 1)],
+    eta_hist = eta_hist[1:k]
+  )
+}
+```
+
+#### Run from $x_0=2$ and $x_0=5$
+
+```{r}
+# Constant step size choice (can be tuned if needed)
+eta_const <- 0.05
+
+res_c_2 <- gd_constant(x0 = 2, eta = eta_const)
+res_c_5 <- gd_constant(x0 = 5, eta = eta_const)
+
+res_b_2 <- gd_backtracking(x0 = 2)
+res_b_5 <- gd_backtracking(x0 = 5)
+
+bind_rows(
+  tibble(method = "constant", x0 = 2, x_hat = res_c_2$x_hat, iters = res_c_2$iter),
+  tibble(method = "constant", x0 = 5, x_hat = res_c_5$x_hat, iters = res_c_5$iter),
+  tibble(method = "backtracking", x0 = 2, x_hat = res_b_2$x_hat, iters = res_b_2$iter),
+  tibble(method = "backtracking", x0 = 5, x_hat = res_b_5$x_hat, iters = res_b_5$iter)
+)
+```
+
+#### 1) Step size selection discussion
+
+For constant-step GD, a practical approach is to test candidate values of $\eta$ and choose one that decreases $f(x_k)$ monotonically and converges quickly without oscillation. Starting from larger $x_0$ typically requires a smaller stable step size because $|f'(x)|$ is much larger farther from the minimizer.
+
+#### 2) Convergence plot: $f(x_k)$ vs iteration $k$
+
+```{r}
+plot_df <- bind_rows(
+  tibble(k = seq_along(res_c_2$f_hist) - 1, f = res_c_2$f_hist, method = "Constant", x0 = "x0 = 2"),
+  tibble(k = seq_along(res_c_5$f_hist) - 1, f = res_c_5$f_hist, method = "Constant", x0 = "x0 = 5"),
+  tibble(k = seq_along(res_b_2$f_hist) - 1, f = res_b_2$f_hist, method = "Backtracking", x0 = "x0 = 2"),
+  tibble(k = seq_along(res_b_5$f_hist) - 1, f = res_b_5$f_hist, method = "Backtracking", x0 = "x0 = 5")
+)
+
+ggplot(plot_df, aes(x = k, y = f, color = method)) +
+  geom_line() +
+  facet_wrap(~x0, scales = "free_x") +
+  labs(title = "Convergence of Objective Value", x = "Iteration k", y = "f(x_k)") +
+  theme_minimal()
+```
+
+#### 3) Dynamic step size plot for backtracking
+
+```{r}
+eta_df <- bind_rows(
+  tibble(k = seq_along(res_b_2$eta_hist), eta = res_b_2$eta_hist, x0 = "x0 = 2"),
+  tibble(k = seq_along(res_b_5$eta_hist), eta = res_b_5$eta_hist, x0 = "x0 = 5")
+)
+
+ggplot(eta_df, aes(x = k, y = eta)) +
+  geom_line(color = "firebrick") +
+  facet_wrap(~x0, scales = "free_x") +
+  labs(title = "Backtracking Step Sizes", x = "Iteration k", y = expression(eta[k])) +
+  theme_minimal()
+```
+
+Backtracking typically chooses smaller steps when gradients are large and may stabilize or increase effective accepted step behavior near the minimizer where curvature is milder.
+
+## Problem 2
+
+To explore how gradient methods respond to objective-function shape, use `dataset_1.csv` and `dataset_2.csv`.
+
+Each dataset has $n=1000$ observations of response $y$ and predictors $x_j$.
+
+### Data loading and objective setup
+
+```{r}
+#| message: false
+#| warning: false
+
+# datasets should live in the same folder as this qmd
+
+ds1 <- read_csv("dataset_1.csv", show_col_types = FALSE)
+ds2 <- read_csv("dataset_2.csv", show_col_types = FALSE)
+
+prep_xy <- function(dat) {
+  x_cols <- setdiff(names(dat), "y")
+  X <- as.matrix(dat[, x_cols])
+  y <- dat$y
+  list(X = X, y = y)
+}
+
+mse_obj <- function(beta, X, y) {
+  r <- as.vector(X %*% beta - y)
+  0.5 * mean(r^2)
+}
+
+grad_mse <- function(beta, X, y) {
+  n <- nrow(X)
+  as.vector(crossprod(X, X %*% beta - y) / n)
+}
+```
+
+### Part (a): Standard GD with constant and backtracking step sizes
+
+```{r}
+lin_gd <- function(X, y, beta0 = NULL, eta = 1e-3, tol = 1e-8, max_iter = 50000) {
+  p <- ncol(X)
+  beta <- if (is.null(beta0)) rep(0, p) else beta0
+
+  f_hist <- numeric(max_iter + 1)
+  f_hist[1] <- mse_obj(beta, X, y)
+
+  k <- 0
+  repeat {
+    g <- grad_mse(beta, X, y)
+    if (sqrt(sum(g^2)) < tol || k >= max_iter) break
+
+    beta <- beta - eta * g
+    k <- k + 1
+    f_hist[k + 1] <- mse_obj(beta, X, y)
+  }
+
+  list(beta = beta, iters = k, f_hist = f_hist[1:(k + 1)])
+}
+
+lin_gd_backtracking <- function(
+  X, y, beta0 = NULL, eta0 = 1, alpha = 1e-4, rho = 0.5, tol = 1e-8, max_iter = 50000
+) {
+  p <- ncol(X)
+  beta <- if (is.null(beta0)) rep(0, p) else beta0
+
+  f_hist <- numeric(max_iter + 1)
+  eta_hist <- numeric(max_iter)
+  f_hist[1] <- mse_obj(beta, X, y)
+
+  k <- 0
+  repeat {
+    g <- grad_mse(beta, X, y)
+    gnorm2 <- sum(g^2)
+    if (sqrt(gnorm2) < tol || k >= max_iter) break
+
+    eta <- eta0
+    f0 <- mse_obj(beta, X, y)
+    while (mse_obj(beta - eta * g, X, y) > f0 - alpha * eta * gnorm2) {
+      eta <- rho * eta
+    }
+
+    beta <- beta - eta * g
+    k <- k + 1
+    f_hist[k + 1] <- mse_obj(beta, X, y)
+    eta_hist[k] <- eta
+  }
+
+  list(beta = beta, iters = k, f_hist = f_hist[1:(k + 1)], eta_hist = eta_hist[1:k])
+}
+```
+
+```{r}
+run_part_a <- function(dat, eta_const = 1e-3, tol = 1e-8) {
+  obj <- prep_xy(dat)
+  X <- obj$X
+  y <- obj$y
+
+  gd_c <- lin_gd(X, y, eta = eta_const, tol = tol)
+  gd_b <- lin_gd_backtracking(X, y, tol = tol)
+
+  # Exact least-squares reference (no intercept)
+  ols <- lm(y ~ X - 1)
+  beta_ols <- coef(ols)
+
+  l2_c <- sqrt(sum((gd_c$beta - beta_ols)^2))
+  l2_b <- sqrt(sum((gd_b$beta - beta_ols)^2))
+
+  list(gd_c = gd_c, gd_b = gd_b, beta_ols = beta_ols, l2_c = l2_c, l2_b = l2_b)
+}
+
+res1_a <- run_part_a(ds1)
+res2_a <- run_part_a(ds2)
+
+tibble(
+  dataset = c("dataset_1", "dataset_1", "dataset_2", "dataset_2"),
+  method = c("GD constant", "GD backtracking", "GD constant", "GD backtracking"),
+  l2_error_to_ols = c(res1_a$l2_c, res1_a$l2_b, res2_a$l2_c, res2_a$l2_b),
+  iterations = c(res1_a$gd_c$iters, res1_a$gd_b$iters, res2_a$gd_c$iters, res2_a$gd_b$iters)
+)
+```
+
+```{r}
+plot_conv <- function(res_a, label) {
+  bind_rows(
+    tibble(k = seq_along(res_a$gd_c$f_hist) - 1, f = res_a$gd_c$f_hist, method = "GD constant", dataset = label),
+    tibble(k = seq_along(res_a$gd_b$f_hist) - 1, f = res_a$gd_b$f_hist, method = "GD backtracking", dataset = label)
+  )
+}
+
+conv_df <- bind_rows(plot_conv(res1_a, "dataset_1"), plot_conv(res2_a, "dataset_2"))
+
+ggplot(conv_df, aes(k, f, color = method)) +
+  geom_line() +
+  facet_wrap(~dataset, scales = "free_x") +
+  labs(title = "Part (a): Objective vs Iteration", x = "Iteration", y = "Objective") +
+  theme_minimal()
+```
+
+### Part (b): Heavy Ball and Nesterov methods
+
+```{r}
+heavy_ball <- function(X, y, beta0 = NULL, eta = 1e-3, gamma = 0.9, tol = 1e-8, max_iter = 50000) {
+  p <- ncol(X)
+  beta <- if (is.null(beta0)) rep(0, p) else beta0
+  v <- rep(0, p)
+
+  f_hist <- numeric(max_iter + 1)
+  f_hist[1] <- mse_obj(beta, X, y)
+
+  k <- 0
+  repeat {
+    g <- grad_mse(beta, X, y)
+    if (sqrt(sum(g^2)) < tol || k >= max_iter) break
+
+    v <- gamma * v + eta * g
+    beta <- beta - v
+
+    k <- k + 1
+    f_hist[k + 1] <- mse_obj(beta, X, y)
+  }
+
+  list(beta = beta, iters = k, f_hist = f_hist[1:(k + 1)])
+}
+
+nesterov <- function(X, y, beta0 = NULL, eta = 1e-3, gamma = 0.9, tol = 1e-8, max_iter = 50000) {
+  p <- ncol(X)
+  beta <- if (is.null(beta0)) rep(0, p) else beta0
+  v <- rep(0, p)
+
+  f_hist <- numeric(max_iter + 1)
+  f_hist[1] <- mse_obj(beta, X, y)
+
+  k <- 0
+  repeat {
+    lookahead <- beta - gamma * v
+    g <- grad_mse(lookahead, X, y)
+    if (sqrt(sum(g^2)) < tol || k >= max_iter) break
+
+    v <- gamma * v + eta * g
+    beta <- beta - v
+
+    k <- k + 1
+    f_hist[k + 1] <- mse_obj(beta, X, y)
+  }
+
+  list(beta = beta, iters = k, f_hist = f_hist[1:(k + 1)])
+}
+```
+
+```{r}
+run_part_b <- function(dat, eta = 1e-3, gamma = 0.9, tol = 1e-8) {
+  obj <- prep_xy(dat)
+  X <- obj$X
+  y <- obj$y
+
+  hb <- heavy_ball(X, y, eta = eta, gamma = gamma, tol = tol)
+  nag <- nesterov(X, y, eta = eta, gamma = gamma, tol = tol)
+
+  ols <- lm(y ~ X - 1)
+  beta_ols <- coef(ols)
+
+  l2_hb <- sqrt(sum((hb$beta - beta_ols)^2))
+  l2_nag <- sqrt(sum((nag$beta - beta_ols)^2))
+
+  list(hb = hb, nag = nag, l2_hb = l2_hb, l2_nag = l2_nag)
+}
+
+res1_b <- run_part_b(ds1)
+res2_b <- run_part_b(ds2)
+
+tibble(
+  dataset = c("dataset_1", "dataset_1", "dataset_2", "dataset_2"),
+  method = c("Heavy Ball", "Nesterov", "Heavy Ball", "Nesterov"),
+  l2_error_to_ols = c(res1_b$l2_hb, res1_b$l2_nag, res2_b$l2_hb, res2_b$l2_nag),
+  iterations = c(res1_b$hb$iters, res1_b$nag$iters, res2_b$hb$iters, res2_b$nag$iters)
+)
+```
+
+```{r}
+mom_df <- bind_rows(
+  tibble(k = seq_along(res1_b$hb$f_hist) - 1, f = res1_b$hb$f_hist, method = "Heavy Ball", dataset = "dataset_1"),
+  tibble(k = seq_along(res1_b$nag$f_hist) - 1, f = res1_b$nag$f_hist, method = "Nesterov", dataset = "dataset_1"),
+  tibble(k = seq_along(res2_b$hb$f_hist) - 1, f = res2_b$hb$f_hist, method = "Heavy Ball", dataset = "dataset_2"),
+  tibble(k = seq_along(res2_b$nag$f_hist) - 1, f = res2_b$nag$f_hist, method = "Nesterov", dataset = "dataset_2")
+)
+
+ggplot(mom_df, aes(k, f, color = method)) +
+  geom_line() +
+  facet_wrap(~dataset, scales = "free_x") +
+  labs(title = "Part (b): Momentum Methods Objective vs Iteration", x = "Iteration", y = "Objective") +
+  theme_minimal()
+```
+
+### Findings
+
+Summarize:
+
+- Which methods achieved smaller $\|\hat{\beta} - \hat{\beta}_{OLS}\|_2$.
+- Which methods required fewer iterations.
+- How constant-step and backtracking behavior differed between `dataset_1` and `dataset_2`.

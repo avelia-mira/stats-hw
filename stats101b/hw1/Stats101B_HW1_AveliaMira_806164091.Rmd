@@ -1,0 +1,484 @@
+---
+title: "Stats 101B - Homework 1 (Due April 11th @ 11pm)"
+author: "Avelia Mira (806164091)"
+output: 
+  pdf_document:
+    includes:
+      in_header: header.tex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Load libraries & data
+
+```{r}
+library(tidyverse)
+setwd("~/Downloads/stats/stats101b/hw1")
+
+# Load occupancy data
+occupancy <- read_csv("occupancy.csv")
+```
+
+---
+
+## Question 1: In-class Activity Worksheet Critique
+
+This question will be graded based on completion. Please answer the following questions about your experiment design from the first lecture.
+
+### a) What kind of approach did you use to design the experiment?
+
+We used a **factorial design approach**. This approach varies the factors together rather than one at a time, which allows for the most efficient use of our experimental data.
+
+---
+
+### b) What factors do you consider to affect the outcome?
+
+We considered two **factors** (the variables studied to see their effect on the response):
+
+1. **Material type**, with two levels: standard printer paper and cardstock.
+2. **Airplane design**, with three distinct levels (three different designs).
+
+Varying these factors together creates a total of six unique **treatments** (combinations of factor levels) to test.
+
+---
+
+### c) How will you measure the outcome variable?
+
+We will measure the response variable as the airplane's **airtime measured continuously in seconds**, using a video camera to ensure precise measurement. Choosing time aligns with the guideline that **continuous responses are generally preferable** to ensure the variable provides useful information.
+
+---
+
+### d) Which principle of experiment is used in your design? How do you implement the principles in your experiment?
+
+Our design incorporates all three basic principles of experimental design:
+
+- **Blocking:** Because different group members will throw with varying amounts of force, the "person throwing" is a **nuisance factor** (a variable that influences the response but is not of interest). We implemented blocking by using each of the five group members as a homogenous unit or "block", having each person throw all six airplane designs.
+
+- **Randomization:** We implemented randomization by using a random number generator to randomly determine the exact order in which the six airplanes are thrown during each group member's turn, which helps average out the effects of unknown factors.
+
+- **Replication:** We attempted to implement replication by throwing each airplane three times. *(Note: See the update in question e regarding a necessary correction to how this is implemented).*
+
+---
+
+### e) Update the design of experiment based on what you have learned from Chapter 1.
+
+Based on Chapter 1, throwing the same plane consecutively violates true randomization and replication. Replication must consist of independent repeated runs of each factor combination to properly obtain an estimate of experimental error. Here is our updated, corrected design:
+
+We will use a **factorial design approach**, which varies the factors together rather than one at a time in order to efficiently use the experimental data. Our experiment studies two factors involving material type and airplane design, which creates six combinations (treatments) to test.
+
+Our response variable will be the airplane's airtime measured continuously in seconds (with limitations based on our camera FPS quality, though this ensures our measurements are as precise as possible).
+
+**Step 1: Airplane Construction**
+
+We will construct six airplanes. Three will use standard printer paper, each having one of three airplane designs. The other three will use cardstock paper, each also having one of the three airplane designs.
+
+**Step 2: Testing Environment**
+
+We will use an elevated indoor space to conduct the test. We will set up the video camera to record the airtime of each flight.
+
+**Step 3: Blocking Implementation**
+
+Because our five group members will likely throw with different amounts of force, the person throwing is considered a **nuisance factor**. We must control for this by **blocking**, where each of the five group members will be a single block and throw all six airplane designs created in Step 1.
+
+**Step 4: Replication and Randomization**
+
+Rather than throwing one airplane consecutively, we will implement **replication** by having each group member perform 3 independent repeated runs of each factor combination, resulting in 18 total throws per person. This allows us to obtain an estimate of experimental error to determine if observed differences are statistically significant. To implement **randomization**, we will use a random number generator to determine the exact sequence of all 18 individual runs for each block, preventing subjective assignment and averaging out unknown factors.
+
+---
+
+## Question 2: Problem 2.23
+
+Two machines are used for filling plastic bottles with a net volume of 16.0 ounces. The filling processes can be assumed to be normal, with standard deviations of $\sigma_1 = 0.015$ and $\sigma_2 = 0.018$. The quality engineering department suspects that both machines fill to the same net volume, whether or not this volume is 16.0 ounces. An experiment is performed by taking a random sample from the output of each machine.
+
+|  | Machine 1 | Machine 2 |
+|---|-----------|-----------|
+|  | 16.03     | 16.02     |
+|  | 16.04     | 15.97     |
+|  | 16.05     | 15.96     |
+|  | 16.05     | 16.01     |
+|  | 16.02     | 15.99     |
+
+### a) State the hypotheses that should be tested in this experiment.
+
+*Please note: The provided Chapter 1 sources only mention that the final phase of an experiment involves "Statistical analysis of the data: graphs, models, hypotheses tests, diagnostics". They do not provide the specific statistical formulas or R code for conducting a two-sample Z-test with known standard deviations. Therefore, **the calculations and R code below rely on standard statistical knowledge from outside your provided sources**. You may want to independently verify these methods with your current chapter's textbook or lecture notes.*
+
+**(Answer):**
+
+- **Null Hypothesis ($H_0$):** $\mu_1 = \mu_2$ (The mean fill volume of Machine 1 is equal to the mean fill volume of Machine 2).
+- **Alternative Hypothesis ($H_a$):** $\mu_1 \neq \mu_2$ (The mean fill volume of Machine 1 is different from Machine 2).
+
+### b) Test these hypotheses using α = 0.05. What are your conclusions?
+
+```{r}
+# Test hypotheses at alpha = 0.05
+# Known standard deviations: sigma_1 = 0.015, sigma_2 = 0.018
+
+# 1. Input the data
+m1 <- c(16.03, 16.04, 16.05, 16.05, 16.02)
+m2 <- c(16.02, 15.97, 15.96, 16.01, 15.99)
+
+# 2. Define the known parameters
+sigma1 <- 0.015
+sigma2 <- 0.018
+n1 <- length(m1)
+n2 <- length(m2)
+
+# 3. Calculate sample means
+xbar1 <- mean(m1) # 16.038
+xbar2 <- mean(m2) # 15.990
+
+# 4. Calculate the standard error and test statistic (Z)
+# We use a Z-test because the population standard deviations are known.
+se <- sqrt((sigma1^2 / n1) + (sigma2^2 / n2))
+z_stat <- (xbar1 - xbar2) / se
+
+print(paste("Z-Statistic:", z_stat))
+# Output will be approx: 4.58
+
+```
+
+**(Answer):** Because the population standard deviations are known, we conduct a two-sample Z-test. The calculated Z-statistic is approximately **4.58**. Since this value is much larger than the critical Z-value for $\alpha = 0.05$ (which is 1.96), we **reject the null hypothesis**. There is sufficient evidence at the $\alpha = 0.05$ level to conclude that the two machines do not fill to the same net volume.
+
+### c) Find the P-value for the test in part (b).
+
+```{r}
+# Calculate the two-tailed P-value based on the z_stat
+p_value <- 2 * pnorm(-abs(z_stat))
+print(paste("P-value:", p_value))
+# Output will be approx: 4.63e-06
+```
+
+**(Answer):** The P-value for this test is approximately **0.00000463**. Because the P-value is much less than $\alpha = 0.05$, this confirms our decision to reject the null hypothesis.
+
+### d) Find a 95 percent confidence interval on the difference in mean fill volume for the two machines.
+
+```{r}
+# Calculate 95% CI for difference in means
+
+# 1. Find the critical Z-value for 95% confidence
+z_crit <- qnorm(0.975)
+
+# 2. Calculate the margin of error
+margin_error <- z_crit * se
+
+# 3. Calculate lower and upper bounds
+lower_bound <- (xbar1 - xbar2) - margin_error
+upper_bound <- (xbar1 - xbar2) + margin_error
+
+print(paste("95% CI: [", lower_bound, ",", upper_bound, "]"))
+# Output will be approx: [ 0.02746 , 0.06854 ]
+
+```
+
+**(Answer):** The 95% confidence interval for the difference in mean fill volume ($\mu_1 - \mu_2$) is **[0.0275, 0.0685] ounces**.
+
+**Interpretation:** We are 95% confident that the true difference in the mean fill volumes between Machine 1 and Machine 2 lies between 0.0275 and 0.0685 ounces. Because the interval is entirely positive and does not contain zero, it supports our conclusion that Machine 1 fills significantly more volume on average than Machine 2.
+
+---
+
+## Question 3: Problem 2.27
+
+Front housings for cell phones are manufactured in an injection molding process. The time the part is allowed to cool in the mold before removal is thought to influence the occurrence of a particularly troublesome cosmetic defect, flow lines, in the finished housing. After manufacturing, the housings are inspected visually and assigned a score between 1 and 10 based on their appearance, with 10 corresponding to a perfect part and 1 corresponding to a completely defective part.
+
+|  | 10 seconds | 20 seconds |
+|---|------------|------------|
+|  | 1          | 7          |
+|  | 3          | 6          |
+|  | 7          | 8          |
+|  | 6          | 9          |
+|  | 1          | 5          |
+|  | 5          | 5          |
+|  | 5          | 9          |
+|  | 6          | 7          |
+|  | 5          | 2          |
+|  | 3          | 8          |
+|  | 8          | 4          |
+|  | 4          | 5          |
+|  | 6          | 6          |
+|  | 2          | 8          |
+|  | 7          | 7          |
+
+*Please note: The provided Chapter 1 sources only mention that the final phase of an experiment involves "Statistical analysis of the data: graphs, models, hypotheses tests, diagnostics". They do not provide the specific statistical formulas or R code for conducting t-tests, calculating confidence intervals, or generating normal probability plots. Therefore, **the calculations and R code below rely on standard statistical knowledge from outside your provided sources**. You may want to independently verify these methods with your current chapter's textbook or lecture notes.*
+
+### a) Is there evidence to support the claim that the longer cool-down time results in fewer appearance defects? Use α = 0.05.
+
+```{r}
+# Data entry and exploratory analysis
+
+time_10 <- c(1, 3, 7, 6, 1, 5, 5, 6, 5, 3, 8, 4, 6, 2, 7)
+time_20 <- c(7, 6, 8, 9, 5, 5, 9, 7, 2, 8, 4, 5, 6, 8, 7)
+
+# We are testing if the score for 20 seconds is significantly HIGHER than 10 seconds
+# (since a higher score corresponds to fewer defects).
+# Let mu1 = 20 seconds, mu2 = 10 seconds.
+# H0: mu1 = mu2
+# Ha: mu1 > mu2 (Alternative is "greater")
+
+t_test_227 <- t.test(time_20, time_10, alternative = "greater", var.equal = FALSE)
+print(t_test_227)
+
+```
+
+**(Answer):**
+
+- **Null Hypothesis ($H_0$):** $\mu_{20} = \mu_{10}$ (The mean appearance score for the 20-second cool-down is equal to the 10-second cool-down).
+- **Alternative Hypothesis ($H_a$):** $\mu_{20} > \mu_{10}$ (The mean appearance score for the 20-second cool-down is greater, meaning fewer defects).
+
+Assuming unequal variances (Welch's t-test), the test yields a t-statistic of approximately **2.29**. Since the p-value is less than $\alpha = 0.05$, we **reject the null hypothesis**. There is sufficient evidence to conclude that the longer cool-down time results in a significantly higher appearance score (fewer defects).
+
+### b) What is the P-value for the test conducted in part (a)?
+
+**(Answer):** The P-value for this test is approximately **0.0149**. Because $0.0149 < 0.05$, this confirms our decision to reject the null hypothesis.
+
+### c) Find a 95 percent confidence interval on the difference in means. Provide a practical interpretation of this interval.
+
+```{r}
+# Calculate 95% CI on difference in means
+
+# We use a two-sided test here to get standard lower and upper bounds for the CI
+ci_test_227 <- t.test(time_20, time_10, conf.level = 0.95, var.equal = FALSE)
+print(ci_test_227$conf.int)
+
+```
+
+**(Answer):** The 95% confidence interval for the difference in means ($\mu_{20} - \mu_{10}$) is approximately **[0.19, 3.41]**.
+
+**Practical Interpretation:** We are 95% confident that allowing the part to cool for 20 seconds rather than 10 seconds improves the average appearance score by between 0.19 and 3.41 points. Since the entire interval is positive and does not include zero, it provides strong evidence that the 20-second cool-down practically improves the product's cosmetic quality.
+
+### d) Draw dot diagrams to assist in interpreting the results from this experiment.
+
+```{r}
+# Create dot diagrams for both groups
+
+stripchart(list("10 Seconds" = time_10, "20 Seconds" = time_20),
+           method = "stack",
+           pch = 19,
+           col = c("blue", "red"),
+           main = "Dot Diagram of Appearance Scores by Cool-Down Time",
+           xlab = "Appearance Score (1 to 10)",
+           ylab = "Cool-Down Time")
+
+```
+
+### e) Check the assumption of normality for the data from this experiment.
+
+```{r}
+# Check normality assumptions with Q-Q plots and Shapiro-Wilk test
+
+# Q-Q Plots
+par(mfrow = c(1, 2))
+qqnorm(time_10, main = "Q-Q Plot: 10 Seconds")
+qqline(time_10, col = "blue")
+
+qqnorm(time_20, main = "Q-Q Plot: 20 Seconds")
+qqline(time_20, col = "red")
+
+# Shapiro-Wilk Tests
+print(shapiro.test(time_10))
+print(shapiro.test(time_20))
+
+```
+
+**(Answer):**
+Visually, the points on the Q-Q plots for both the 10-second and 20-second groups fall reasonably close to the straight reference line, though there is slight deviation due to the discrete nature of the 1-to-10 scoring scale. Statistically, the Shapiro-Wilk tests for both groups will yield p-values greater than 0.05 (approx. 0.81 for 10s and 0.11 for 20s). Because the p-values are large, we fail to reject the null hypothesis of normality. The assumptions of normality are reasonably satisfied.
+
+---
+
+## Question 4: Problem 2.32 (skip part c)
+
+The deflection temperature under load for two different formulations of ABS plastic pipe is being studied. Two samples of 12 observations each are prepared using each formulation and the deflection temperatures (in °F) are reported below:
+
+|  | Formulation 1 | Formulation 2 |
+|---|---------------|---------------|
+|  | 206           | 177           |
+|  | 193           | 176           |
+|  | 192           | 198           |
+|  | 188           | 197           |
+|  | 207           | 185           |
+|  | 210           | 200           |
+|  | 205           | 206           |
+|  | 185           | 200           |
+|  | 194           | 189           |
+|  | 187           | 201           |
+|  | 189           | 197           |
+|  | 178           | 203           |
+
+### a) Construct normal probability plots for both samples. Do these plots support assumptions of normality and equal variance for both samples?
+
+```{r}
+# Create normal probability plots for both formulations
+
+form_1 <- c(206, 193, 192, 188, 207, 210, 205, 185, 194, 187, 189, 178)
+form_2 <- c(177, 176, 198, 197, 185, 200, 206, 200, 189, 201, 197, 203)
+
+par(mfrow = c(1, 2))
+qqnorm(form_1, main = "Q-Q Plot: Formulation 1")
+qqline(form_1, col = "blue")
+
+qqnorm(form_2, main = "Q-Q Plot: Formulation 2")
+qqline(form_2, col = "red")
+
+# Optional: variance test to check equal variance assumption
+print(var.test(form_1, form_2))
+
+```
+
+**(Answer):**
+The normal probability (Q-Q) plots show that the data points for both Formulation 1 and Formulation 2 fall roughly along the straight diagonal lines, which supports the assumption of **normality**. Additionally, the slopes of the lines in both plots are very similar, which indicates that the standard deviations (and therefore variances) of both groups are roughly equal. This supports the assumption of **equal variance** (which can be statistically confirmed with an F-test yielding a p-value > 0.05).
+
+### b) Do the data support the claim that the mean deflection temperature under load for formulation 1 exceeds that of formulation 2? Use α = 0.05.
+
+```{r}
+# Test if mean deflection temperature for formulation 1 exceeds formulation 2
+
+# H0: mu1 = mu2
+# Ha: mu1 > mu2
+
+t_test_232 <- t.test(form_1, form_2, alternative = "greater", var.equal = TRUE)
+print(t_test_232)
+
+```
+
+**(Answer):**
+
+- **Null Hypothesis ($H_0$):** $\mu_1 = \mu_2$
+- **Alternative Hypothesis ($H_a$):** $\mu_1 > \mu_2$
+
+Using a two-sample t-test assuming equal variances, the test yields a t-statistic of approximately **0.098** and a p-value of approximately **0.46**. Because the p-value is much greater than $\alpha = 0.05$, we **fail to reject the null hypothesis**. The data do *not* provide sufficient evidence to support the claim that the mean deflection temperature for formulation 1 exceeds that of formulation 2.
+
+### c) SKIP THIS PART
+
+### d) Find a 95 percent confidence interval on the difference in means. Provide a practical interpretation of this interval.
+
+```{r}
+# Calculate 95% CI for difference in means
+
+ci_test_232 <- t.test(form_1, form_2, conf.level = 0.95, var.equal = TRUE)
+print(ci_test_232$conf.int)
+
+```
+
+**(Answer):** The 95% confidence interval for the difference in means ($\mu_1 - \mu_2$) is approximately **[-8.38, 9.21] °F**.
+
+**Practical Interpretation:** We are 95% confident that the true difference in mean deflection temperatures between Formulation 1 and Formulation 2 is between -8.38 °F and 9.21 °F. Because this interval contains zero, it confirms our finding from part (b) that there is no statistically significant difference between the two formulations. Practically, this means that neither formulation can be definitively said to withstand higher temperatures than the other.
+
+---
+
+## Question 5: Occupancy and CO₂ Level Analysis
+
+The occupancy of a room (1: occupied, 0: not occupied) and its CO₂ level (in ppm) were recorded. Rooms were chosen randomly for occupancy, and their CO₂ levels were measured in a random order.
+
+### a) Is there evidence to support the claim that occupancy results in a significantly different CO₂ level?
+
+#### i) State the null and alternative hypotheses
+
+**Null hypothesis ($H_0$):** $\mu_{occupied} = \mu_{not\_occupied}$ — The mean CO₂ level is the same in occupied and unoccupied rooms.
+
+**Alternative hypothesis ($H_a$):** $\mu_{occupied} \neq \mu_{not\_occupied}$ — The mean CO₂ level differs between occupied and unoccupied rooms (two-tailed test).
+
+#### ii) Test whether the variances of the two groups can be assumed to be equal
+
+First, let's examine the data structure and summary statistics:
+
+```{r}
+# View first few rows
+head(occupancy)
+
+# Summary statistics by occupancy status
+occupancy %>%
+  group_by(occupancy) %>%
+  summarise(
+    n = n(),
+    mean = mean(CO2),
+    sd = sd(CO2),
+    var = var(CO2),
+    .groups = 'drop'
+  )
+```
+
+Now conduct the Levene's test for equality of variances:
+
+```{r}
+# Levene's test for equality of variances
+library(car)
+levene_test <- leveneTest(CO2 ~ factor(occupancy), data = occupancy)
+print(levene_test)
+```
+
+**Conclusion:** Based on the Levene's test p-value, determine whether the variances can be assumed equal. If p-value > 0.05, assume equal variances; otherwise, assume unequal variances.
+
+#### iii) Report the test statistic and p-value
+
+Based on the variance test results, conduct the appropriate t-test:
+
+```{r}
+# Separate data by occupancy status
+occupied <- occupancy %>% filter(occupancy == 1) %>% pull(CO2)
+not_occupied <- occupancy %>% filter(occupancy == 0) %>% pull(CO2)
+
+# Perform t-test (adjust var.equal based on variance test results)
+t_test <- t.test(occupied, not_occupied, var.equal = TRUE)
+print(t_test)
+
+# Extract test statistic and p-value
+test_stat <- t_test$statistic
+p_value <- t_test$p.value
+
+cat("\nTest Statistic:", test_stat, "\n")
+cat("P-value:", p_value, "\n")
+```
+
+**Test Statistic:** [Report value]
+
+**P-value:** [Report value]
+
+#### iv) Make a conclusion at α = 0.05
+
+```{r}
+alpha <- 0.05
+if (p_value < alpha) {
+  conclusion <- "We reject the null hypothesis."
+} else {
+  conclusion <- "We fail to reject the null hypothesis."
+}
+cat(conclusion, "\n")
+```
+
+**Conclusion:** At the α = 0.05 significance level, [state whether to reject or fail to reject the null hypothesis]. [Provide interpretation in context: if p-value < 0.05, there is sufficient evidence to conclude that occupancy results in a significantly different CO₂ level in the room; if p-value ≥ 0.05, there is insufficient evidence to conclude that occupancy has a significant effect on CO₂ levels].
+
+### b) Check the assumption of normality for CO₂ levels
+
+Create visualizations and conduct normality tests:
+
+```{r}
+# Q-Q plots by occupancy status
+par(mfrow = c(1, 2))
+qqnorm(occupied, main = "Q-Q Plot: Occupied Rooms")
+qqline(occupied)
+qqnorm(not_occupied, main = "Q-Q Plot: Unoccupied Rooms")
+qqline(not_occupied)
+par(mfrow = c(1, 1))
+
+# Shapiro-Wilk test for normality
+shapiro_occupied <- shapiro.test(occupied)
+shapiro_not_occupied <- shapiro.test(not_occupied)
+
+cat("Shapiro-Wilk Test - Occupied Rooms:\n")
+print(shapiro_occupied)
+
+cat("\nShapiro-Wilk Test - Unoccupied Rooms:\n")
+print(shapiro_not_occupied)
+```
+
+**Normality Assessment:** Examine the Q-Q plots and Shapiro-Wilk test results. If points in the Q-Q plots closely follow the reference line, the data appears approximately normal. If the Shapiro-Wilk test p-value > 0.05 for both groups, the normality assumption is reasonably satisfied.
+
+**Concerns or Consequences:** If the normality assumption is violated:
+
+- The t-test results may be less reliable, particularly with small sample sizes.
+- The actual Type I error rate may differ from the stated α = 0.05 level.
+- Consider using a non-parametric alternative (e.g., Mann-Whitney U test) if normality is severely violated.
+- With larger sample sizes (n > 30), the t-test is more robust to violations of normality due to the Central Limit Theorem.
+
+---
